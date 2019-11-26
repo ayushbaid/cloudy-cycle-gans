@@ -1,16 +1,12 @@
 import os
-
+import torch
 import torch.utils
-
+import torchvision.datasets.ImageFolder as ImageFolder
+from torch.autograd import Variable
+import matplotlib.pyplot as plt
 from runner.dataloader import TwoClassLoader
 from transforms.im_transforms import get_fundamental_transforms
 from models.cycle_gans import CycleGAN
-
-from torch.autograd import Variable
-import matplotlib.pyplot as plt
-
-import torchvision.datasets.ImageFolder as ImageFolder
-
 
 class Trainer():
   '''
@@ -43,7 +39,19 @@ class Trainer():
                                                   **dataloader_args
                                                   )
 
-    self.optimizer = optimizer
+    # Optimizers & LR schedulers
+    self.optimizer_G = torch.optim.Adam(itertools.chain(self.cycle_gan.generator_A2B.parameters(),
+                                                        self.cycle_gan.generator_B2A.parameters()),
+                                                        lr=opt.lr, betas=(0.5, 0.999))
+    self.optimizer_D_A = torch.optim.Adam(self.cycle_gan.discriminator_A.parameters(), lr=opt.lr, betas=(0.5, 0.999))
+    self.optimizer_D_B = torch.optim.Adam(self.cycle_gan.discriminator_B.parameters(), lr=opt.lr, betas=(0.5, 0.999))
+    
+    # total number of epochs = 200
+    # starting epoch = 0
+    # epoch to start linearly decaying the learning rate to 0 = 100
+    self.lr_scheduler_G = torch.optim.lr_scheduler.LambdaLR(self.optimizer_G, lr_lambda=LambdaLR(200, 0, 100).step)
+    self.lr_scheduler_D_A = torch.optim.lr_scheduler.LambdaLR(self.optimizer_D_A, lr_lambda=LambdaLR(200, 0, 100).step)
+    self.lr_scheduler_D_B = torch.optim.lr_scheduler.LambdaLR(self.optimizer_D_B, lr_lambda=LambdaLR(200, 0, 100).step)
 
     self.train_loss_history = []
     self.validation_loss_history = []
