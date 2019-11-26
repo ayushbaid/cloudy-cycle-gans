@@ -1,6 +1,3 @@
-import torch
-from torch.autograd import Variable
-
 class LambdaLR():
     '''
     We keep the same learning rate for the first decay_start_epoch and
