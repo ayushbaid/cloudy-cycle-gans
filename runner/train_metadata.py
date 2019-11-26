@@ -7,22 +7,26 @@ class TrainMetadata(object):
   '''
 
   def __init__(self):
+    self.loss_train_total = []
     self.loss_train_generator = []
     self.loss_train_discriminator = []
     self.loss_train_cycle = []
 
     # variables for aggegating over an epoch
     self.agg_num_samples = 0
+    self.agg_loss_total = 0
     self.agg_loss_generator = 0
     self.agg_loss_discriminator = 0
     self.agg_loss_cycle = 0
 
   def aggregate_loss_vals(self,
+                          total_loss,
                           generator_loss,
                           discriminator_loss,
                           cycle_loss,
                           batch_size):
     self.agg_num_samples += batch_size
+    self.agg_loss_total += total_loss
     self.agg_loss_generator += generator_loss
     self.agg_loss_discriminator += discriminator_loss
     self.agg_loss_cycle += cycle_loss
@@ -31,6 +35,9 @@ class TrainMetadata(object):
     '''
     Logs the losses after some granularity 
     '''
+    self.loss_train_total.append(
+        self.agg_loss_total/self.agg_num_samples
+    )
     self.loss_train_generator.append(
         self.agg_loss_generator/self.agg_num_samples)
     self.loss_train_discriminator.append(
@@ -40,15 +47,16 @@ class TrainMetadata(object):
 
     # reset aggegations
     self.agg_num_samples = 0
+    self.agg_loss_total = 0
     self.agg_loss_generator = 0
     self.agg_loss_discriminator = 0
     self.agg_loss_cycle = 0
 
   def plot_train_loss(self):
     plt.figure()
-
-    plt.plot(self.loss_train_generator, label='train_generator')
-    plt.plot(self.loss_train_discriminator, label='train_discriminator')
-    plt.plot(self.loss_train_cycle, label='train_cycle')
+    plt.plot(self.loss_train_total, label='total')
+    plt.plot(self.loss_train_generator, label='generator')
+    plt.plot(self.loss_train_discriminator, label='discriminator')
+    plt.plot(self.loss_train_cycle, label='cycle')
 
     plt.title('Loss plots')

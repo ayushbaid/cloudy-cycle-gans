@@ -1,11 +1,13 @@
 import os
-import torch
-import torch.utils
-from torch.autograd import Variable
-import matplotlib.pyplot as plt
+
 from runner.dataloader import TwoClassLoader
 from transforms.im_transforms import get_fundamental_transforms
 from models.cycle_gans import CycleGAN
+from runner.train_metadata import TrainMetadata
+
+import torch
+import torch.utils
+from torch.autograd import Variable
 
 
 class Trainer():
@@ -59,8 +61,7 @@ class Trainer():
     self.lr_scheduler_D_B = torch.optim.lr_scheduler.LambdaLR(
         self.optimizer_D_B, lr_lambda=LambdaLR(200, 0, 100).step)
 
-    self.train_loss_history = []
-    self.validation_loss_history = []
+    self.train_history = TrainMetadata()
 
     # load the model from the disk if it exists
     if os.path.exists(model_dir) and load_from_disk:
@@ -85,61 +86,27 @@ class Trainer():
     '''
     self.cycle_gan.train_mode()
     for epoch_idx in range(num_epochs):
-      for batch_idx, batch in enumerate(self.train_loader):
+      for _, batch in enumerate(self.train_loader):
         if self.cuda:
-          input_data, target_data = Variable(
-              batch[0]).cuda(), Variable(batch[1]).cuda()
+          inputA, inputB = Variable(batch[0]).cuda(), Variable(batch[1]).cuda()
         else:
-          input_data, target_data = Variable(batch[0]), Variable(batch[1])
+          inputA, inputB = Variable(batch[0]), Variable(batch[1])
 
-        output_data = self.model(input_data)
-        loss = self.model.loss_critereon(output_data, target_data)
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
+        # do the loss computation
+        loss_generator, loss_discriminator, loss_cycle = self.cycle_gan.forward_train(
+            inputA, inputB)
 
-      self.train_loss_history.append(float(loss))
+        # get scalar values
+        scalar_loss_generator = float(loss_generator.detach().cpu())
+        scalar_loss_discriminator = float(loss_discriminator.detach().cpu())
+        scalar_loss_cycle = float(loss_cycle.detach().cpu())
 
-      if epoch_idx % 1 == 0:
-        print('Epoch:{}, Loss:{:.4f}'.format(epoch_idx+1, float(loss)))
-        # self.save_model()
+        self.train_history.aggregate_loss_vals(
+            scalar_loss_generator+scalar_loss_discriminator+scalar_loss_cycle,
+            scalar_loss_generator,
+            scalar_loss_discriminator,
+            scalar_loss_cycle,
+            inputA.shape[0])
 
-  def eval_on_test(self):
-    '''
-    Get loss on test set
-    '''
-    test_loss = 0.0
-
-    num_examples = 0
-    for batch_idx, batch in enumerate(self.test_loader):
-      if self.cuda:
-        input_data, target_data = Variable(
-            batch[0]).cuda(), Variable(batch[1]).cuda()
-      else:
-        input_data, target_data = Variable(batch[0]), Variable(batch[1])
-
-      num_examples += input_data.shape[0]
-      output_data = self.model.forward(input_data)
-      loss = self.model.loss_critereon(
-          output_data, target_data, is_normalize=False)
-
-      test_loss += float(loss)
-
-    self.validation_loss_history.append(test_loss/num_examples)
-
-    return self.validation_loss_history[-1]
-
-  def plot_loss_history(self):
-    '''
-    Plots the loss history
-    '''
-    plt.figure()
-    ep = range(len(self.train_loss_history))
-
-    plt.plot(ep, self.train_loss_history, '-b', label='training')
-    plt.plot(ep, self.validation_loss_history, '-r', label='validation')
-    plt.title("Loss history")
-    plt.legend()
-    plt.ylabel("Loss")
-    plt.xlabel("Epochs")
-    plt.show()
+      # commit the loss aggregations
+      self.train_history.log_losses()
