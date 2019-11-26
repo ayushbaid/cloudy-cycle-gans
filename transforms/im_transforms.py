@@ -4,7 +4,7 @@ Defining image transforms for data
 import torchvision.transforms as transforms
 
 
-def get_fundamental_transforms(im_size, mean_val, std_val):
+def get_fundamental_transforms(im_size, mean_val=0, std_val=1):
   '''
   Performs the most basic transforms on input images
   '''

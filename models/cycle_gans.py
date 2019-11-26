@@ -125,3 +125,8 @@ class CycleGAN(object):
     self.discriminator_B.train()
 
     return gen_A2B, gen_B2A, gen_A2B2A, gen_B2A2B
+
+  def load_from_disk(self, path):
+    # load the state from disk
+
+    # TODO: write the code

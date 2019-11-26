@@ -2,6 +2,10 @@ import os
 
 import torch.utils
 
+from runner.dataloader import TwoClassLoader
+from transforms.im_transforms import get_fundamental_transforms
+from models.cycle_gans import CycleGAN
+
 from torch.autograd import Variable
 import matplotlib.pyplot as plt
 
@@ -15,37 +19,29 @@ class Trainer():
 
   def __init__(self,
                data_dir,
-               model,
                optimizer,
                model_dir,
-               train_data_transforms,
-               test_data_transforms,
                batch_size=100,
                load_from_disk=True,
                cuda=False
                ):
     self.model_dir = model_dir
 
-    self.model = model
-
-    self.cuda = cuda
-    if cuda:
-      self.model.cuda()
+    self.cycle_gan = CycleGAN(is_cuda=cuda)
 
     dataloader_args = {'num_workers': 1, 'pin_memory': True} if cuda else {}
 
-    self.train_dataset = ImageFolder(root=os.path.join(data_dir, 'train'),
-                                     target_transform=train_data_transforms
-                                     )
+    self.train_dataset = TwoClassLoader(
+        'data_small', get_fundamental_transforms(im_size=(128, 128)), split='train')
+
     self.train_loader = torch.utils.data.DataLoader(self.train_dataset, batch_size=batch_size, shuffle=True,
                                                     **dataloader_args)
 
-    self.test_dataset = ImageFolder(root=os.path.join(data_dir, 'test'),
-                                    target_transform=test_data_transforms
-                                    )
-    self.test_loader = torch.utils.data.DataLoader(self.test_dataset, batch_size=batch_size, shuffle=True,
-                                                   **dataloader_args
-                                                   )
+    self.val_dataset = TwoClassLoader(
+        'data_small', get_fundamental_transforms(im_size=(128, 128)), split='val')
+    self.val_loader = torch.utils.data.DataLoader(self.val_dataset, batch_size=batch_size, shuffle=True,
+                                                  **dataloader_args
+                                                  )
 
     self.optimizer = optimizer
 
@@ -54,11 +50,9 @@ class Trainer():
 
     # load the model from the disk if it exists
     if os.path.exists(model_dir) and load_from_disk:
-      checkpoint = torch.load(os.path.join(self.model_dir, 'checkpoint.pt'))
-      self.model.load_state_dict(checkpoint['model_state_dict'])
-      self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+      self.cycle_gan.load_from_disk()
 
-      # TODO: write code to load and save epoch and loss history too, so that we can truly pause and resume
+    # TODO: write code to load and save epoch and loss history too, so that we can truly pause and resume
 
     self.model.train()
 
