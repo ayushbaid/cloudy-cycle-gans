@@ -17,14 +17,16 @@ class TwoClassLoader(data.Dataset):
     ))
 
     # load all the images in class #A
-    self.data_classA = [Image.open(f) for f in self.files_classA]
+    self.data_classA = [self.transforms(Image.open(f))
+                        for f in self.files_classA]
 
     self.files_classB = glob.glob(os.path.join(
         self.root_dir, split, classes[1], '*.jpg'
     ))
 
     # load all the images in class #B
-    self.data_classB = [Image.open(f) for f in self.files_classB]
+    self.data_classB = [self.transforms(Image.open(f))
+                        for f in self.files_classB]
 
     # as we might have unequal number of A and B, we will take the max length as the length of the dataset
     self.num_items = max(len(self.data_classA), len(self.data_classB))
@@ -34,8 +36,8 @@ class TwoClassLoader(data.Dataset):
     # random values of second class might help generalize better
 
     return (
-        self.transforms(self.data_classA[len(self.data_classA) % idx]),
-        self.transforms(random.choice(self.data_classB))
+        self.data_classA[len(self.data_classA) % idx],
+        random.choice(self.data_classB)
     )
 
   def __len__(self):
