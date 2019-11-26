@@ -1,4 +1,5 @@
 import os
+import itertools
 
 from runner.dataloader import TwoClassLoader
 from transforms.im_transforms import get_fundamental_transforms
@@ -18,7 +19,6 @@ class Trainer():
 
   def __init__(self,
                data_dir,
-               optimizer,
                model_dir,
                batch_size=100,
                load_from_disk=True,
@@ -46,11 +46,11 @@ class Trainer():
     # Optimizers & LR schedulers
     self.optimizer_G = torch.optim.Adam(itertools.chain(self.cycle_gan.generator_A2B.parameters(),
                                                         self.cycle_gan.generator_B2A.parameters()),
-                                        lr=opt.lr, betas=(0.5, 0.999))
+                                        lr=2e-4, betas=(0.5, 0.999))
     self.optimizer_D_A = torch.optim.Adam(
-        self.cycle_gan.discriminator_A.parameters(), lr=opt.lr, betas=(0.5, 0.999))
+        self.cycle_gan.discriminator_A.parameters(), lr=2e-4, betas=(0.5, 0.999))
     self.optimizer_D_B = torch.optim.Adam(
-        self.cycle_gan.discriminator_B.parameters(), lr=opt.lr, betas=(0.5, 0.999))
+        self.cycle_gan.discriminator_B.parameters(), lr=2e-4, betas=(0.5, 0.999))
 
     # total number of epochs = 200
     # starting epoch = 0
@@ -88,13 +88,14 @@ class Trainer():
     self.cycle_gan.train_mode()
     for epoch_idx in range(num_epochs):
       for _, batch in enumerate(self.train_loader):
+        print('loop')
         if self.cuda:
           inputA, inputB = Variable(batch[0]).cuda(), Variable(batch[1]).cuda()
         else:
           inputA, inputB = Variable(batch[0]), Variable(batch[1])
 
         # do the loss computation
-        loss_generator, loss_cycle, loss_discriminator_A, loss_discriminator_B  = self.cycle_gan.forward_train(
+        loss_generator, loss_cycle, loss_discriminator_A, loss_discriminator_B = self.cycle_gan.forward_train(
             inputA, inputB)
 
         # train the generator
@@ -102,15 +103,15 @@ class Trainer():
         loss_generator_total = loss_generator + loss_cycle
         loss_generator_total.backward()
         self.optimizer_G.step()
-        
+
         # train the discriminator A
         self.optimizer_D_A.zero_grad()
-        loss_discriminator_A.backward()        
+        loss_discriminator_A.backward()
         self.optimizer_D_A.step()
 
         # train the discriminator B
         self.optimizer_D_B.zero_grad()
-        loss_discriminator_B.backward()        
+        loss_discriminator_B.backward()
         self.optimizer_D_B.step()
 
         # get scalar values
