@@ -71,6 +71,7 @@ class CycleGAN(object):
         self.fake_buffer_b.get(discriminatorB_output_fake),
         self.target_fake.expand_as(discriminatorB_output_fake)
     )
+    loss_discriminatorB *= 0.5
 
     # applying cycle on gen_A2B
     gen_A2B2A = self.generator_B2A(gen_A2B)
@@ -96,6 +97,7 @@ class CycleGAN(object):
         self.fake_buffer_a.get(discriminatorA_output_fake),
         self.target_fake.expand_as(discriminatorA_output_fake)
     )
+    loss_discriminatorA *= 0.5
 
     # applying cycle on gen_B2A
     generator_B2A2B = self.generator_A2B(gen_B2A)
@@ -104,7 +106,8 @@ class CycleGAN(object):
 
     return (loss_generator_A2B + loss_generator_B2A,  # gan loss for generator
             loss_cycle_A2B + loss_cycle_B2A,  # cycle loss
-            loss_discriminatorA + loss_discriminatorB  # discriminator loss
+            loss_discriminatorA, # discriminator_A loss
+            loss_discriminatorB  # discriminator_B loss
             )
 
   def generate_images(self, inputA, inputB, switch_modes=True):
