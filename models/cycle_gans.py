@@ -2,6 +2,8 @@ from models.generator import Generator
 from models.descriminator import Descriminator
 from utils.buffer import ImageBuffer
 
+import torch
+
 import torch.nn as nn
 
 
