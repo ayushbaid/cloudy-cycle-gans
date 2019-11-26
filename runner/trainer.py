@@ -1,12 +1,12 @@
 import os
 import torch
 import torch.utils
-import torchvision.datasets.ImageFolder as ImageFolder
 from torch.autograd import Variable
 import matplotlib.pyplot as plt
 from runner.dataloader import TwoClassLoader
 from transforms.im_transforms import get_fundamental_transforms
 from models.cycle_gans import CycleGAN
+
 
 class Trainer():
   '''
@@ -22,6 +22,7 @@ class Trainer():
                cuda=False
                ):
     self.model_dir = model_dir
+    self.cuda = cuda
 
     self.cycle_gan = CycleGAN(is_cuda=cuda)
 
@@ -42,16 +43,21 @@ class Trainer():
     # Optimizers & LR schedulers
     self.optimizer_G = torch.optim.Adam(itertools.chain(self.cycle_gan.generator_A2B.parameters(),
                                                         self.cycle_gan.generator_B2A.parameters()),
-                                                        lr=opt.lr, betas=(0.5, 0.999))
-    self.optimizer_D_A = torch.optim.Adam(self.cycle_gan.discriminator_A.parameters(), lr=opt.lr, betas=(0.5, 0.999))
-    self.optimizer_D_B = torch.optim.Adam(self.cycle_gan.discriminator_B.parameters(), lr=opt.lr, betas=(0.5, 0.999))
-    
+                                        lr=opt.lr, betas=(0.5, 0.999))
+    self.optimizer_D_A = torch.optim.Adam(
+        self.cycle_gan.discriminator_A.parameters(), lr=opt.lr, betas=(0.5, 0.999))
+    self.optimizer_D_B = torch.optim.Adam(
+        self.cycle_gan.discriminator_B.parameters(), lr=opt.lr, betas=(0.5, 0.999))
+
     # total number of epochs = 200
     # starting epoch = 0
     # epoch to start linearly decaying the learning rate to 0 = 100
-    self.lr_scheduler_G = torch.optim.lr_scheduler.LambdaLR(self.optimizer_G, lr_lambda=LambdaLR(200, 0, 100).step)
-    self.lr_scheduler_D_A = torch.optim.lr_scheduler.LambdaLR(self.optimizer_D_A, lr_lambda=LambdaLR(200, 0, 100).step)
-    self.lr_scheduler_D_B = torch.optim.lr_scheduler.LambdaLR(self.optimizer_D_B, lr_lambda=LambdaLR(200, 0, 100).step)
+    self.lr_scheduler_G = torch.optim.lr_scheduler.LambdaLR(
+        self.optimizer_G, lr_lambda=LambdaLR(200, 0, 100).step)
+    self.lr_scheduler_D_A = torch.optim.lr_scheduler.LambdaLR(
+        self.optimizer_D_A, lr_lambda=LambdaLR(200, 0, 100).step)
+    self.lr_scheduler_D_B = torch.optim.lr_scheduler.LambdaLR(
+        self.optimizer_D_B, lr_lambda=LambdaLR(200, 0, 100).step)
 
     self.train_loss_history = []
     self.validation_loss_history = []
@@ -77,7 +83,7 @@ class Trainer():
     '''
     The main train loop
     '''
-    self.model.train()
+    self.cycle_gan.train_mode()
     for epoch_idx in range(num_epochs):
       for batch_idx, batch in enumerate(self.train_loader):
         if self.cuda:
@@ -93,9 +99,6 @@ class Trainer():
         self.optimizer.step()
 
       self.train_loss_history.append(float(loss))
-      self.model.eval()
-      self.eval_on_test()
-      self.model.train()
 
       if epoch_idx % 1 == 0:
         print('Epoch:{}, Loss:{:.4f}'.format(epoch_idx+1, float(loss)))
