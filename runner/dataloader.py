@@ -8,8 +8,9 @@ from PIL import Image
 
 
 class TwoClassLoader(data.Dataset):
-  def __init__(self, root_dir, split='train', classes=('cloudy', 'sunny')):
+  def __init__(self, root_dir, transforms, split='train', classes=('cloudy', 'sunny')):
     self.root_dir = root_dir
+    self.transforms = transforms
 
     self.files_classA = glob.glob(os.path.join(
         self.root_dir, split, classes[0], '*.jpg'
@@ -33,8 +34,8 @@ class TwoClassLoader(data.Dataset):
     # random values of second class might help generalize better
 
     return (
-        self.data_classA[len(self.data_classA) % idx],
-        random.choice(self.data_classB)
+        self.transforms(self.data_classA[len(self.data_classA) % idx]),
+        self.transforms(random.choice(self.data_classB))
     )
 
   def __len__(self):
