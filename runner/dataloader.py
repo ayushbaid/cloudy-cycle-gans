@@ -29,7 +29,7 @@ class TwoClassLoader(data.Dataset):
 
     return (
         self.transforms(Image.open(
-            self.files_classA[len(self.files_classA) % idx])),
+            self.files_classA[idx % len(self.files_classA)])),
         self.transforms(Image.open(random.choice(self.files_classB)))
     )
 
