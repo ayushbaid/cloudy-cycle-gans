@@ -68,7 +68,7 @@ class CycleGAN(object):
     discriminatorA_output_real = self.discriminator_A(inputA)
 
     # adding gan loss
-    gan_loss_A2B = self.gan_loss_criterion(
+    gan_loss_B2A = self.gan_loss_criterion(
         discriminatorA_output_fake,
         self.target_fake.expand_as(discriminatorA_output_fake)
     ) + self.gan_loss_criterion(
@@ -81,7 +81,7 @@ class CycleGAN(object):
 
     cycle_loss_B2A = lambda_*self.cycle_loss_criterion(inputB, generator_B2A2B)
 
-    return gan_loss_A2B + gen_B2A + cycle_loss_B2A + cycle_loss_A2B
+    return gan_loss_A2B + gan_loss_B2A + cycle_loss_B2A + cycle_loss_A2B
 
   def generate_images(self, inputA, inputB, switch_modes=True):
     # put everything in eval mode
