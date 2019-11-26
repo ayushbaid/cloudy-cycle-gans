@@ -44,15 +44,16 @@ class CycleGAN(object):
 
   def get_target_tensor(self, value):
     if self.is_cuda:
-      return torch.cuda.LongTensor(value)
+      return torch.cuda.FloatTensor([value])
     else:
-      return torch.LongTensor(value)
+      return torch.FloatTensor([value])
 
   def forward_train(self, inputA, inputB, lambda_=10):
 
     # apply the generatorB to convert into B space
     gen_A2B = self.generator_A2B(inputA)
-    discriminatorB_output_fake = self.discriminator_B(gen_A2B)
+    discriminatorB_output_fake = self.discriminator_B(
+        self.fake_buffer_b.get(gen_A2B))
     discriminatorB_output_real = self.discriminator_B(inputB)
 
     # adding gan loss
@@ -68,7 +69,7 @@ class CycleGAN(object):
         discriminatorB_output_real,
         self.target_real.expand_as(discriminatorB_output_real)
     ) + self.gan_loss_criterion(
-        self.fake_buffer_b.get(discriminatorB_output_fake),
+        discriminatorB_output_fake,
         self.target_fake.expand_as(discriminatorB_output_fake)
     )
     loss_discriminatorB *= 0.5
@@ -80,7 +81,8 @@ class CycleGAN(object):
 
     # apply the generatorA to convert into A space
     gen_B2A = self.generator_B2A(inputB)
-    discriminatorA_output_fake = self.discriminator_A(gen_B2A)
+    discriminatorA_output_fake = self.discriminator_A(
+        self.fake_buffer_a.get(gen_B2A))
     discriminatorA_output_real = self.discriminator_A(inputA)
 
     # generator wants to fool the descriminator
@@ -94,7 +96,7 @@ class CycleGAN(object):
         discriminatorA_output_real,
         self.target_real.expand_as(discriminatorA_output_real)
     ) + self.gan_loss_criterion(
-        self.fake_buffer_a.get(discriminatorA_output_fake),
+        discriminatorA_output_fake,
         self.target_fake.expand_as(discriminatorA_output_fake)
     )
     loss_discriminatorA *= 0.5
@@ -106,7 +108,7 @@ class CycleGAN(object):
 
     return (loss_generator_A2B + loss_generator_B2A,  # gan loss for generator
             loss_cycle_A2B + loss_cycle_B2A,  # cycle loss
-            loss_discriminatorA, # discriminator_A loss
+            loss_discriminatorA,  # discriminator_A loss
             loss_discriminatorB  # discriminator_B loss
             )
 

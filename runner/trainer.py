@@ -32,13 +32,13 @@ class Trainer():
     dataloader_args = {'num_workers': 1, 'pin_memory': True} if cuda else {}
 
     self.train_dataset = TwoClassLoader(
-        data_dir, get_fundamental_transforms(im_size=(128, 128)), split='train')
+        data_dir, get_fundamental_transforms(im_size=(300, 300)), split='train')
 
     self.train_loader = torch.utils.data.DataLoader(self.train_dataset, batch_size=batch_size, shuffle=True,
                                                     **dataloader_args)
 
     self.val_dataset = TwoClassLoader(
-        data_dir, get_fundamental_transforms(im_size=(128, 128)), split='val')
+        data_dir, get_fundamental_transforms(im_size=(300, 300)), split='val')
     self.val_loader = torch.utils.data.DataLoader(self.val_dataset, batch_size=batch_size, shuffle=True,
                                                   **dataloader_args
                                                   )
@@ -116,7 +116,8 @@ class Trainer():
 
         # get scalar values
         scalar_loss_generator = float(loss_generator.detach().cpu())
-        scalar_loss_discriminator = float(loss_discriminator.detach().cpu())
+        scalar_loss_discriminator = float(
+            (loss_discriminatorA + loss_discriminator_B).detach().cpu())
         scalar_loss_cycle = float(loss_cycle.detach().cpu())
 
         self.train_history.aggregate_loss_vals(
@@ -127,9 +128,9 @@ class Trainer():
             inputA.shape[0])
 
       # update learning rates
-      lr_scheduler_G.step()
-      lr_scheduler_D_A.step()
-      lr_scheduler_D_B.step()
+      self.lr_scheduler_G.step()
+      self.lr_scheduler_D_A.step()
+      self.lr_scheduler_D_B.step()
 
       # commit the loss aggregations
       self.train_history.log_losses()
