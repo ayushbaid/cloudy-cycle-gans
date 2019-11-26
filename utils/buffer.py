@@ -26,7 +26,7 @@ class ImageBuffer(object):
     result = []
 
     for image in input_images.data:
-      image = torch.unsqueenze(image, 0)
+      image = torch.unsqueeze(image, 0)
       if len(self.buffer_list) < self.buffer_size:
         # buffer is not full yet
         self.buffer_list.append(image)
@@ -44,4 +44,3 @@ class ImageBuffer(object):
 
       # return the result as a single tensor
       return Variable(torch.cat(result, 0))
-

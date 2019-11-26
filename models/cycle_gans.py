@@ -1,11 +1,12 @@
 from models.generator import Generator
 from models.descriminator import Descriminator
+from utils.buffer import ImageBuffer
 
 import torch.nn as nn
 
 
 class CycleGAN(object):
-  def __init__(self, is_cuda, use_identity_loss=False):
+  def __init__(self, is_cuda, use_identity_loss=False, buffer_size=50):
 
     self.is_cuda = is_cuda
     self.use_identity_loss = use_identity_loss
@@ -29,11 +30,15 @@ class CycleGAN(object):
       self.discriminator_B.cuda()
 
     # define the loss functions
-    self.gan_loss_criterion = nn.BCEWithLogitsLoss()
+    # mse loss is used instead of cross entropy to reduce model osscilation
+    self.gan_loss_criterion = nn.MSELoss()
     self.cycle_loss_criterion = nn.L1Loss()
 
     if self.use_identity_loss:
       self.identity_loss_criterion = nn.L1Loss()
+
+    self.fake_buffer_a = ImageBuffer(buffer_size)
+    self.fake_buffer_b = ImageBuffer(buffer_size)
 
   def get_target_tensor(self, value):
     if self.is_cuda:
@@ -49,39 +54,56 @@ class CycleGAN(object):
     discriminatorB_output_real = self.discriminator_B(inputB)
 
     # adding gan loss
-    gan_loss_A2B = self.gan_loss_criterion(
+
+    # generator wants to fool the descriminator
+    loss_generator_A2B = self.gan_loss_criterion(
         discriminatorB_output_fake,
-        self.target_fake.expand_as(discriminatorB_output_fake)
-    ) + self.gan_loss_criterion(
+        self.target_real.expand_as(discriminatorB_output_fake)
+    )
+
+    # discriminator wants to prevent being fooled and classify correctly
+    loss_discriminatorB = self.gan_loss_criterion(
         discriminatorB_output_real,
         self.target_real.expand_as(discriminatorB_output_real)
+    ) + self.gan_loss_criterion(
+        self.fake_buffer_b.get(discriminatorB_output_fake),
+        self.target_fake.expand_as(discriminatorB_output_fake)
     )
 
     # applying cycle on gen_A2B
     gen_A2B2A = self.generator_B2A(gen_A2B)
 
-    cycle_loss_A2B = lambda_*self.cycle_loss_criterion(inputA, gen_A2B2A)
+    loss_cycle_A2B = lambda_*self.cycle_loss_criterion(inputA, gen_A2B2A)
 
     # apply the generatorA to convert into A space
     gen_B2A = self.generator_B2A(inputB)
     discriminatorA_output_fake = self.discriminator_A(gen_B2A)
     discriminatorA_output_real = self.discriminator_A(inputA)
 
-    # adding gan loss
-    gan_loss_A2B = self.gan_loss_criterion(
+    # generator wants to fool the descriminator
+    loss_generator_B2A = self.gan_loss_criterion(
         discriminatorA_output_fake,
-        self.target_fake.expand_as(discriminatorA_output_fake)
-    ) + self.gan_loss_criterion(
+        self.target_real.expand_as(discriminatorA_output_fake)
+    )
+
+    # discriminator wants to prevent being fooled and classify correctly
+    loss_discriminatorA = self.gan_loss_criterion(
         discriminatorA_output_real,
         self.target_real.expand_as(discriminatorA_output_real)
+    ) + self.gan_loss_criterion(
+        self.fake_buffer_a.get(discriminatorA_output_fake),
+        self.target_fake.expand_as(discriminatorA_output_fake)
     )
 
     # applying cycle on gen_B2A
     generator_B2A2B = self.generator_A2B(gen_B2A)
 
-    cycle_loss_B2A = lambda_*self.cycle_loss_criterion(inputB, generator_B2A2B)
+    loss_cycle_B2A = lambda_*self.cycle_loss_criterion(inputB, generator_B2A2B)
 
-    return gan_loss_A2B + gen_B2A + cycle_loss_B2A + cycle_loss_A2B
+    return (loss_generator_A2B + loss_generator_B2A,  # gan loss for generator
+            loss_cycle_A2B + loss_cycle_B2A,  # cycle loss
+            loss_discriminatorA + loss_discriminatorB  # discriminator loss
+            )
 
   def generate_images(self, inputA, inputB, switch_modes=True):
     # put everything in eval mode
