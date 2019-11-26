@@ -126,7 +126,36 @@ class CycleGAN(object):
 
     return gen_A2B, gen_B2A, gen_A2B2A, gen_B2A2B
 
-  def load_from_disk(self, path):
+  def load_from_state(self, state_dict):
     # load the state from disk
 
-    # TODO: write the code
+    self.generator_A2B.load_state_dict(state_dict['generator_A2B'])
+    self.generator_B2A.load_state_dict(state_dict['generator_A2B'])
+    self.discriminator_A.load_state_dict(state_dict['discriminator_A'])
+    self.discriminator_B.load_state_dict(state_dict['discriminator_B'])
+
+  def extract_state(self):
+    return {
+        'generator_A2B': self.generator_A2B.state_dict(),
+        'generator_B2A': self.generator_B2A.state_dict(),
+        'discriminator_A': self.discriminator_A.state_dict(),
+        'discriminator_B': self.discriminator_B.state_dict()
+    }
+
+  def train_mode(self):
+    '''
+    Sets all the models to train mode
+    '''
+    self.generator_A2B.train()
+    self.generator_B2A.train()
+    self.discriminator_A.train()
+    self.discriminator_B.train()
+
+  def eval_mode(self):
+    '''
+    Sets all the models to eval mode
+    '''
+    self.generator_A2B.eval()
+    self.generator_B2A.eval()
+    self.discriminator_A.eval()
+    self.discriminator_B.eval()

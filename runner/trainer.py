@@ -32,13 +32,13 @@ class Trainer():
     dataloader_args = {'num_workers': 1, 'pin_memory': True} if cuda else {}
 
     self.train_dataset = TwoClassLoader(
-        'data_small', get_fundamental_transforms(im_size=(128, 128)), split='train')
+        data_dir, get_fundamental_transforms(im_size=(128, 128)), split='train')
 
     self.train_loader = torch.utils.data.DataLoader(self.train_dataset, batch_size=batch_size, shuffle=True,
                                                     **dataloader_args)
 
     self.val_dataset = TwoClassLoader(
-        'data_small', get_fundamental_transforms(im_size=(128, 128)), split='val')
+        data_dir, get_fundamental_transforms(im_size=(128, 128)), split='val')
     self.val_loader = torch.utils.data.DataLoader(self.val_dataset, batch_size=batch_size, shuffle=True,
                                                   **dataloader_args
                                                   )
@@ -50,19 +50,19 @@ class Trainer():
 
     # load the model from the disk if it exists
     if os.path.exists(model_dir) and load_from_disk:
-      self.cycle_gan.load_from_disk()
+      checkpoint = torch.load(os.path.join(model_dir, 'checkpoint.pt'))
+      self.cycle_gan.load_from_state(checkpoint['model_state_dict'])
 
-    # TODO: write code to load and save epoch and loss history too, so that we can truly pause and resume
+      # TODO: write code to load and save epoch and loss history too, so that we can truly pause and resume
 
-    self.model.train()
+    self.cycle_gan.train_mode()
 
   def save_model(self):
     '''
     Saves the model state and optimizer state on the dict
     '''
     torch.save({
-        'model_state_dict': self.model.state_dict(),
-        'optimizer_state_dict': self.optimizer.state_dict()
+        'model_state_dict': self.cycle_gan.extract_state(),
     }, os.path.join(self.model_dir, 'checkpoint.pt'))
 
   def train(self, num_epochs):
