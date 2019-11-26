@@ -4,6 +4,7 @@ from runner.dataloader import TwoClassLoader
 from transforms.im_transforms import get_fundamental_transforms
 from models.cycle_gans import CycleGAN
 from runner.train_metadata import TrainMetadata
+from utils.lrScheduler import LambdaLR
 
 import torch
 import torch.utils
@@ -93,8 +94,24 @@ class Trainer():
           inputA, inputB = Variable(batch[0]), Variable(batch[1])
 
         # do the loss computation
-        loss_generator, loss_discriminator, loss_cycle = self.cycle_gan.forward_train(
+        loss_generator, loss_cycle, loss_discriminator_A, loss_discriminator_B  = self.cycle_gan.forward_train(
             inputA, inputB)
+
+        # train the generator
+        self.optimizer_G.zero_grad()
+        loss_generator_total = loss_generator + loss_cycle
+        loss_generator_total.backward()
+        self.optimizer_G.step()
+        
+        # train the discriminator A
+        self.optimizer_D_A.zero_grad()
+        loss_discriminator_A.backward()        
+        self.optimizer_D_A.step()
+
+        # train the discriminator B
+        self.optimizer_D_B.zero_grad()
+        loss_discriminator_B.backward()        
+        self.optimizer_D_B.step()
 
         # get scalar values
         scalar_loss_generator = float(loss_generator.detach().cpu())
@@ -107,6 +124,11 @@ class Trainer():
             scalar_loss_discriminator,
             scalar_loss_cycle,
             inputA.shape[0])
+
+      # update learning rates
+      lr_scheduler_G.step()
+      lr_scheduler_D_A.step()
+      lr_scheduler_D_B.step()
 
       # commit the loss aggregations
       self.train_history.log_losses()
