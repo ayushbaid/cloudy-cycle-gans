@@ -64,16 +64,6 @@ class CycleGAN(object):
         self.target_real.expand_as(discriminatorB_output_fake)
     )
 
-    # discriminator wants to prevent being fooled and classify correctly
-    loss_discriminatorB = self.gan_loss_criterion(
-        discriminatorB_output_real,
-        self.target_real.expand_as(discriminatorB_output_real)
-    ) + self.gan_loss_criterion(
-        discriminatorB_output_fake,
-        self.target_fake.expand_as(discriminatorB_output_fake)
-    )
-    loss_discriminatorB *= 0.5
-
     # applying cycle on gen_A2B
     gen_A2B2A = self.generator_B2A(gen_A2B)
 
@@ -91,6 +81,21 @@ class CycleGAN(object):
         self.target_real.expand_as(discriminatorA_output_fake)
     )
 
+    # applying cycle on gen_B2A
+    generator_B2A2B = self.generator_A2B(gen_B2A)
+
+    loss_cycle_B2A = lambda_*self.cycle_loss_criterion(inputB, generator_B2A2B)
+
+    return (loss_generator_A2B + loss_generator_B2A,  # gan loss for generator
+            loss_cycle_A2B + loss_cycle_B2A,  # cycle loss
+            )
+
+  def forward_train_DA( self, inputA, inputB ):
+    gen_B2A = self.generator_B2A(inputB)
+    discriminatorA_output_fake = self.discriminator_A(
+        self.fake_buffer_a.get(gen_B2A))
+    discriminatorA_output_real = self.discriminator_A(inputA)
+
     # discriminator wants to prevent being fooled and classify correctly
     loss_discriminatorA = self.gan_loss_criterion(
         discriminatorA_output_real,
@@ -100,17 +105,24 @@ class CycleGAN(object):
         self.target_fake.expand_as(discriminatorA_output_fake)
     )
     loss_discriminatorA *= 0.5
+    return loss_discriminatorA
 
-    # applying cycle on gen_B2A
-    generator_B2A2B = self.generator_A2B(gen_B2A)
+  def forward_train_DB( self, inputA, inputB ):
+    gen_A2B = self.generator_A2B(inputA)
+    discriminatorB_output_fake = self.discriminator_B(
+        self.fake_buffer_b.get(gen_A2B))
+    discriminatorB_output_real = self.discriminator_B(inputB)
 
-    loss_cycle_B2A = lambda_*self.cycle_loss_criterion(inputB, generator_B2A2B)
-
-    return (loss_generator_A2B + loss_generator_B2A,  # gan loss for generator
-            loss_cycle_A2B + loss_cycle_B2A,  # cycle loss
-            loss_discriminatorA,  # discriminator_A loss
-            loss_discriminatorB  # discriminator_B loss
-            )
+    # discriminator wants to prevent being fooled and classify correctly
+    loss_discriminatorB = self.gan_loss_criterion(
+        discriminatorB_output_real,
+        self.target_real.expand_as(discriminatorB_output_real)
+    ) + self.gan_loss_criterion(
+        discriminatorB_output_fake,
+        self.target_fake.expand_as(discriminatorB_output_fake)
+    )
+    loss_discriminatorB *= 0.5
+    return loss_discriminatorB
 
   def generate_images(self, inputA, inputB, switch_modes=True):
     # put everything in eval mode

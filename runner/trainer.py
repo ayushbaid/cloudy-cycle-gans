@@ -95,8 +95,7 @@ class Trainer():
           inputA, inputB = Variable(batch[0]), Variable(batch[1])
 
         # do the loss computation
-        loss_generator, loss_cycle, loss_discriminator_A, loss_discriminator_B = self.cycle_gan.forward_train(
-            inputA, inputB)
+        loss_generator, loss_cycle = self.cycle_gan.forward_train(inputA, inputB)
 
         # train the generator
         self.optimizer_G.zero_grad()
@@ -105,11 +104,13 @@ class Trainer():
         self.optimizer_G.step()
 
         # train the discriminator A
+        forward_train_DA = self.cycle_gan.forward_train_DA(inputA, inputB)
         self.optimizer_D_A.zero_grad()
         loss_discriminator_A.backward()
         self.optimizer_D_A.step()
 
         # train the discriminator B
+        forward_train_DB = self.cycle_gan.forward_train_DB(inputA, inputB)
         self.optimizer_D_B.zero_grad()
         loss_discriminator_B.backward()
         self.optimizer_D_B.step()
