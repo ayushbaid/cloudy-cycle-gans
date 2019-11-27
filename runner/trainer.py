@@ -130,10 +130,15 @@ class Trainer():
             scalar_loss_cycle,
             inputA.shape[0])
 
+        if batch_idx % 100 == 0:
+          # commit the loss aggregations
+          self.train_history.log_losses(epoch_idx)
+          self.train_history.plot_train_loss()
+
       # update learning rates
       self.lr_scheduler_G.step()
       self.lr_scheduler_D_A.step()
       self.lr_scheduler_D_B.step()
 
-      # commit the loss aggregations
-      self.train_history.log_losses()
+    self.train_history.log_losses(epoch_idx)
+    self.train_history.plot_train_loss()

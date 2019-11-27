@@ -11,6 +11,7 @@ class TrainMetadata(object):
     self.loss_train_generator = []
     self.loss_train_discriminator = []
     self.loss_train_cycle = []
+    self.epoch_vals = []
 
     # variables for aggegating over an epoch
     self.agg_num_samples = 0
@@ -31,7 +32,7 @@ class TrainMetadata(object):
     self.agg_loss_discriminator += discriminator_loss
     self.agg_loss_cycle += cycle_loss
 
-  def log_losses(self):
+  def log_losses(self, epoch_idx):
     '''
     Logs the losses after some granularity 
     '''
@@ -44,6 +45,7 @@ class TrainMetadata(object):
         self.agg_loss_discriminator/self.agg_num_samples)
     self.loss_train_cycle.append(
         self.agg_loss_cycle/self.agg_num_samples)
+    self.epoch_vals.append(epoch_idx)
 
     # reset aggegations
     self.agg_num_samples = 0
@@ -53,10 +55,11 @@ class TrainMetadata(object):
     self.agg_loss_cycle = 0
 
   def plot_train_loss(self):
-    plt.figure()
-    plt.plot(self.loss_train_total, label='total')
-    plt.plot(self.loss_train_generator, label='generator')
-    plt.plot(self.loss_train_discriminator, label='discriminator')
-    plt.plot(self.loss_train_cycle, label='cycle')
+    plt.figure(9)
+    plt.plot(self.loss_train_total, self.epoch_vals, label='total')
+    plt.plot(self.loss_train_generator, self.epoch_vals, label='generator')
+    plt.plot(self.loss_train_discriminator,
+             self.epoch_vals, label='discriminator')
+    plt.plot(self.loss_train_cycle, self.epoch_vals, label='cycle')
 
     plt.title('Loss plots')
