@@ -1,4 +1,5 @@
 from models.generator import Generator
+from models.generator_full import GeneratorFull
 from models.descriminator import Descriminator
 from utils.buffer import ImageBuffer
 
@@ -19,8 +20,11 @@ class CycleGAN(object):
     self.target_fake = self.get_target_tensor(0)
 
     # init different models
-    self.generator_A2B = Generator()
-    self.generator_B2A = Generator()
+    # self.generator_A2B = Generator()
+    # self.generator_B2A = Generator()
+
+    self.generator_A2B = GeneratorFull()
+    self.generator_B2A = GeneratorFull()
 
     self.discriminator_A = Descriminator()
     self.discriminator_B = Descriminator()
@@ -39,8 +43,8 @@ class CycleGAN(object):
     if self.use_identity_loss:
       self.identity_loss_criterion = nn.L1Loss()
 
-    self.fake_buffer_a = ImageBuffer(buffer_size)
-    self.fake_buffer_b = ImageBuffer(buffer_size)
+    self.fake_buffer_a = ImageBuffer(buffer_size, self.is_cuda)
+    self.fake_buffer_b = ImageBuffer(buffer_size, self.is_cuda)
 
   def get_target_tensor(self, value):
     if self.is_cuda:
@@ -51,8 +55,8 @@ class CycleGAN(object):
   def forward_train(self, inputA, inputB, lambda_=10):
 
     # apply the generatorB to convert into B space
-    gen_A2B = self.generator_A2B(inputA)
-    discriminatorB_output_fake = self.discriminator_B(gen_A2B)
+    self.gen_A2B = self.generator_A2B(inputA)
+    discriminatorB_output_fake = self.discriminator_B(self.gen_A2B)
 
     # adding gan loss
 
@@ -63,13 +67,12 @@ class CycleGAN(object):
     )
 
     # applying cycle on gen_A2B
-    gen_A2B2A = self.generator_B2A(gen_A2B)
-
-    loss_cycle_A2B = lambda_*self.cycle_loss_criterion(inputA, gen_A2B2A)
+    loss_cycle_A2B = lambda_ * \
+        self.cycle_loss_criterion(inputA, self.generator_B2A(self.gen_A2B))
 
     # apply the generatorA to convert into A space
-    gen_B2A = self.generator_B2A(inputB)
-    discriminatorA_output_fake = self.discriminator_A(gen_B2A)
+    self.gen_B2A = self.generator_B2A(inputB)
+    discriminatorA_output_fake = self.discriminator_A(self.gen_B2A)
 
     # generator wants to fool the descriminator
     loss_generator_B2A = self.gan_loss_criterion(
@@ -77,15 +80,9 @@ class CycleGAN(object):
         self.target_real.expand_as(discriminatorA_output_fake)
     )
 
-    # applying cycle on gen_B2A
-    gen_B2A2B = self.generator_A2B(gen_B2A)
+    loss_cycle_B2A = lambda_ * \
+        self.cycle_loss_criterion(inputB, self.generator_A2B(self.gen_B2A))
 
-    loss_cycle_B2A = lambda_*self.cycle_loss_criterion(inputB, gen_B2A2B)
-
-    del gen_A2B
-    del gen_B2A
-    del gen_B2A2B
-    del gen_A2B2A
     del discriminatorA_output_fake
     del discriminatorB_output_fake
 
@@ -94,9 +91,8 @@ class CycleGAN(object):
             )
 
   def forward_train_DA(self, inputA, inputB):
-    gen_B2A = self.generator_B2A(inputB)
     discriminatorA_output_fake = self.discriminator_A(
-        self.fake_buffer_a.get(gen_B2A))
+        self.fake_buffer_a.get(self.gen_B2A))
     discriminatorA_output_real = self.discriminator_A(inputA)
 
     # discriminator wants to prevent being fooled and classify correctly
@@ -108,16 +104,14 @@ class CycleGAN(object):
         self.target_fake.expand_as(discriminatorA_output_fake)
     )
 
-    del gen_B2A
     del discriminatorA_output_fake
     del discriminatorA_output_real
 
     return loss_discriminatorA
 
   def forward_train_DB(self, inputA, inputB):
-    gen_A2B = self.generator_A2B(inputA)
     discriminatorB_output_fake = self.discriminator_B(
-        self.fake_buffer_b.get(gen_A2B))
+        self.fake_buffer_b.get(self.gen_A2B))
     discriminatorB_output_real = self.discriminator_B(inputB)
 
     # discriminator wants to prevent being fooled and classify correctly
@@ -129,7 +123,6 @@ class CycleGAN(object):
         self.target_fake.expand_as(discriminatorB_output_fake)
     )
 
-    del gen_A2B
     del discriminatorB_output_fake
     del discriminatorB_output_real
 

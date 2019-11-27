@@ -13,9 +13,10 @@ class ImageBuffer(object):
   '''
   # TODO: write tests
 
-  def __init__(self, buffer_size):
+  def __init__(self, buffer_size, is_cuda):
     self.buffer_size = buffer_size
     self.buffer_list = []
+    self.is_cuda = is_cuda
 
   def get(self, input_images):
     '''
@@ -43,4 +44,7 @@ class ImageBuffer(object):
           result.append(image)
 
       # return the result as a single tensor
-      return Variable(torch.cat(result, 0))
+      if self.is_cuda:
+        return Variable(torch.cat(result, 0).cuda())
+      else:
+        return Variable(torch.cat(result, 0))

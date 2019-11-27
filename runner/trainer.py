@@ -4,6 +4,8 @@ import time
 
 from runner.dataloader import TwoClassLoader
 from transforms.im_transforms import get_fundamental_transforms
+from torchvision.transforms import ToPILImage
+from PIL import Image
 from models.cycle_gans import CycleGAN
 from runner.train_metadata import TrainMetadata
 from utils.lrScheduler import LambdaLR
@@ -32,14 +34,12 @@ class Trainer():
 
     dataloader_args = {'num_workers': 1, 'pin_memory': True} if cuda else {}
 
-    self.train_dataset = TwoClassLoader(
-        data_dir, get_fundamental_transforms(im_size=(256, 256)), split='train')
+    self.train_dataset = TwoClassLoader(data_dir, split='test')
 
     self.train_loader = torch.utils.data.DataLoader(self.train_dataset, batch_size=batch_size, shuffle=True,
                                                     **dataloader_args)
 
-    self.val_dataset = TwoClassLoader(
-        data_dir, get_fundamental_transforms(im_size=(256, 256)), split='val')
+    self.val_dataset = TwoClassLoader(data_dir, split='val')
     self.val_loader = torch.utils.data.DataLoader(self.val_dataset, batch_size=batch_size, shuffle=True,
                                                   **dataloader_args
                                                   )
@@ -57,17 +57,23 @@ class Trainer():
     # starting epoch = 0
     # epoch to start linearly decaying the learning rate to 0 = 100
     self.lr_scheduler_G = torch.optim.lr_scheduler.LambdaLR(
-        self.optimizer_G, lr_lambda=LambdaLR(200, 0, 100).step)
+        self.optimizer_G, lr_lambda=LambdaLR(50, 0, 25).step)
     self.lr_scheduler_D_A = torch.optim.lr_scheduler.LambdaLR(
-        self.optimizer_D_A, lr_lambda=LambdaLR(200, 0, 100).step)
+        self.optimizer_D_A, lr_lambda=LambdaLR(50, 0, 25).step)
     self.lr_scheduler_D_B = torch.optim.lr_scheduler.LambdaLR(
-        self.optimizer_D_B, lr_lambda=LambdaLR(200, 0, 100).step)
+        self.optimizer_D_B, lr_lambda=LambdaLR(50, 0, 25).step)
 
     self.train_history = TrainMetadata()
 
     # load the model from the disk if it exists
     if os.path.exists(model_dir) and load_from_disk:
-      checkpoint = torch.load(os.path.join(model_dir, 'checkpoint.pt'))
+      print('loading from disk')
+      if not self.cuda:
+        checkpoint = torch.load(
+            os.path.join(model_dir, 'checkpoint.pt'),
+            map_location='cpu')
+      else:
+        checkpoint = torch.load(os.path.join(model_dir, 'checkpoint.pt'))
       self.cycle_gan.load_from_state(checkpoint['model_state_dict'])
 
       # TODO: write code to load and save epoch and loss history too, so that we can truly pause and resume
@@ -151,4 +157,47 @@ class Trainer():
 
     self.train_history.log_losses(epoch_idx)
     self.train_history.plot_train_loss()
-    self.train_history.plot_train_loss()
+    self.save_model()
+
+  def test_on_random_images(self, num_images=10, out_dir='sample_images'):
+    '''
+    Test on random images in the val set
+    '''
+
+    self.cycle_gan.eval_mode()
+
+    with torch.autograd.no_grad():
+
+      for batch_idx, batch in enumerate(self.val_loader):
+        print(batch_idx)
+        if batch_idx == num_images:
+          break
+
+        if self.cuda:
+          inputA, inputB = Variable(batch[0]).cuda(), Variable(batch[1]).cuda()
+        else:
+          inputA, inputB = Variable(batch[0]), Variable(batch[1])
+
+        gen_A2B, gen_B2A, gen_A2B2A, gen_B2A2B = self.cycle_gan.generate_images(
+            inputA, inputB)
+
+        # save them
+        img_A = ToPILImage()(torch.squeeze(inputA.detach().cpu())*0.27253689 + 0.49000312)
+        img_A.save(os.path.join(out_dir, str(batch_idx) + '_A.png'))
+
+        img_B = ToPILImage()(torch.squeeze(inputB.detach().cpu())*0.26870837+0.47342853)
+        img_B.save(os.path.join(out_dir, str(batch_idx) + '_B.png'))
+
+        img_B2A = ToPILImage()(torch.squeeze(gen_B2A.detach().cpu())*0.27253689 + 0.49000312)
+        img_B2A.save(os.path.join(out_dir, str(batch_idx) + '_B2A.png'))
+
+        img_A2B = ToPILImage()(torch.squeeze(gen_A2B.detach().cpu())*0.26870837+0.47342853)
+        img_A2B.save(os.path.join(out_dir, str(batch_idx) + '_A2B.png'))
+
+        img_A2B2A = ToPILImage()(torch.squeeze(
+            gen_A2B2A.detach().cpu())*0.27253689 + 0.49000312)
+        img_A2B2A.save(os.path.join(out_dir, str(batch_idx) + '_A2B2A.png'))
+
+        img_B2A2B = ToPILImage()(torch.squeeze(
+            gen_B2A2B.detach().cpu())*0.26870837+0.47342853)
+        img_B2A2B.save(os.path.join(out_dir, str(batch_idx) + '_B2A2B.png'))

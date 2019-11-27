@@ -75,6 +75,7 @@ class TrainMetadata(object):
     plt.title('Loss plots')
     plt.legend()
     fig.savefig(os.path.join(dir_name, 'loss_plot.jpg'))
+    plt.close()
 
   def plot_train_loss(self):
     plt.figure()

@@ -1,4 +1,5 @@
 from models.generator import Generator
+from models.generator_full import GeneratorFull
 from models.descriminator import Descriminator
 
 import torch
@@ -12,6 +13,12 @@ def test_generator():
   generator_obj = Generator()
 
   out_img = generator_obj(test_img)
+
+  assert out_img.shape == test_img.shape
+
+  generator_full_obj = GeneratorFull()
+
+  out_img = generator_full_obj(test_img)
 
   assert out_img.shape == test_img.shape
 

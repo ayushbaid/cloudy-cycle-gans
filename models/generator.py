@@ -59,7 +59,7 @@ class Generator(nn.Module):
     self.output_conv = nn.Sequential(
         nn.ReflectionPad2d(3),
         nn.Conv2d(64, 3, kernel_size=7, stride=1),
-        nn.Tanh()  # tanh because we want the output to be an image
+        nn.Tanh()  # tanh because we want the output to be an image (and hence bounded values)
     )
 
   def forward(self, x):
