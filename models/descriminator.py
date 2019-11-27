@@ -28,4 +28,4 @@ class Descriminator(nn.Module):
 
   def forward(self, x):
     out = self.net(x)
-    return torch.sigmoid(nn.functional.avg_pool2d(out, out.size()[2:]).view(out.size()[0], -1))
+    return nn.functional.avg_pool2d(out, out.size()[2:]).view(out.size()[0], -1)
