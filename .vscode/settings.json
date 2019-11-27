@@ -1,0 +1,14 @@
+{
+  "python.pythonPath": "/home/ayush/miniconda3/bin/python",
+  "python.linting.pylintEnabled": true,
+  "python.linting.enabled": true,
+  "python.formatting.yapfPath": "/home/ayush/miniconda3/envs/proj6/bin/yapf",
+  "python.linting.pylintArgs": [
+    "--indent-string='  '"
+  ],
+  "python.formatting.autopep8Args": [
+    "--indent-size=2"
+  ],
+  "python.formatting.provider": "autopep8",
+  "editor.formatOnSave": true
+}

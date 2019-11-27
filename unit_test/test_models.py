@@ -5,7 +5,7 @@ import torch
 
 
 def test_generator():
-  im_size = (2, 3, 300, 300)
+  im_size = (2, 3, 256, 256)
 
   test_img = torch.rand(im_size)
 
@@ -17,7 +17,7 @@ def test_generator():
 
 
 def test_discriminator():
-  im_size = (2, 3, 300, 300)
+  im_size = (2, 3, 256, 256)
 
   test_img = torch.rand(im_size)
 

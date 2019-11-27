@@ -10,7 +10,7 @@ reference_folder = '/media/ayush/OS/Users/Ayush/cloudy_data/weather_database/'
 
 class_names = ('sunny', 'cloudy')
 
-final_folder = 'data/'
+final_folder = 'data_small/'
 
 # split between train, val, test
 split_vals = (0.7, 0.15, 0.15)

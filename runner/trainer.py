@@ -87,15 +87,17 @@ class Trainer():
     '''
     self.cycle_gan.train_mode()
     for epoch_idx in range(num_epochs):
-      for _, batch in enumerate(self.train_loader):
-        print('loop')
+      for batch_idx, batch in enumerate(self.train_loader):
+        if batch_idx % 100 == 0:
+          print('Epoch #{} Batch#{}'.format(epoch_idx, batch_idx))
         if self.cuda:
           inputA, inputB = Variable(batch[0]).cuda(), Variable(batch[1]).cuda()
         else:
           inputA, inputB = Variable(batch[0]), Variable(batch[1])
 
         # do the loss computation
-        loss_generator, loss_cycle = self.cycle_gan.forward_train(inputA, inputB)
+        loss_generator, loss_cycle = self.cycle_gan.forward_train(
+            inputA, inputB)
 
         # train the generator
         self.optimizer_G.zero_grad()
@@ -104,13 +106,13 @@ class Trainer():
         self.optimizer_G.step()
 
         # train the discriminator A
-        forward_train_DA = self.cycle_gan.forward_train_DA(inputA, inputB)
+        loss_discriminator_A = self.cycle_gan.forward_train_DA(inputA, inputB)
         self.optimizer_D_A.zero_grad()
         loss_discriminator_A.backward()
         self.optimizer_D_A.step()
 
         # train the discriminator B
-        forward_train_DB = self.cycle_gan.forward_train_DB(inputA, inputB)
+        loss_discriminator_B = self.cycle_gan.forward_train_DB(inputA, inputB)
         self.optimizer_D_B.zero_grad()
         loss_discriminator_B.backward()
         self.optimizer_D_B.step()
@@ -118,7 +120,7 @@ class Trainer():
         # get scalar values
         scalar_loss_generator = float(loss_generator.detach().cpu())
         scalar_loss_discriminator = float(
-            (loss_discriminatorA + loss_discriminator_B).detach().cpu())
+            (loss_discriminator_A + loss_discriminator_B).detach().cpu())
         scalar_loss_cycle = float(loss_cycle.detach().cpu())
 
         self.train_history.aggregate_loss_vals(

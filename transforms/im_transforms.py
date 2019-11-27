@@ -12,7 +12,7 @@ def get_fundamental_transforms(im_size, mean_val=0.0, std_val=1.0):
   '''
 
   return torchtransforms.Compose([
-      torchtransforms.RandomCrop(size=im_size),
+      torchtransforms.CenterCrop(size=im_size),
       torchtransforms.ToTensor(),
       torchtransforms.Normalize(mean=np.array(
           [mean_val]), std=np.array([std_val]))
