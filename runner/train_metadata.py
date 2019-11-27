@@ -1,3 +1,5 @@
+import os
+
 import matplotlib.pyplot as plt
 
 
@@ -71,6 +73,7 @@ class TrainMetadata(object):
     plt.plot(self.loss_train_cycle, label='cycle')
 
     plt.title('Loss plots')
+    plt.legend()
     fig.savefig(os.path.join(dir_name, 'loss_plot.jpg'))
 
   def plot_train_loss(self):
@@ -81,4 +84,5 @@ class TrainMetadata(object):
     plt.plot(self.loss_train_cycle, label='cycle')
 
     plt.title('Loss plots')
+    plt.legend()
     plt.show()

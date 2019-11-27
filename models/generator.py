@@ -13,8 +13,8 @@ class Generator(nn.Module):
     The model defined in the paper is:
     c7s1-64,d128,d256,R256,R256,R256,R256,R256,R256,u128,u64,c7s1-3
 
-    we will use a slightly smaller model:
-    c7s1-64,d128,R128,R128,R128,u128,c7s1-3
+    we will use a smaller model:
+    c7s1-64,d128,d128,R128,R128,R128,u128,u64,c7s1-3
     '''
 
     super(Generator, self).__init__()
@@ -32,6 +32,9 @@ class Generator(nn.Module):
         nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1),
         nn.InstanceNorm2d(128),
         nn.ReLU(inplace=True),
+        nn.Conv2d(128, 128, kernel_size=3, stride=2, padding=1),
+        nn.InstanceNorm2d(128),
+        nn.ReLU(inplace=True),
     )
 
     temp_list = []
@@ -41,8 +44,12 @@ class Generator(nn.Module):
     # R128,R128,R128
     self.residual_net = nn.Sequential(*temp_list)
 
-    # u128
+    # u64
     self.upsampling = nn.Sequential(
+        nn.ConvTranspose2d(128, 128, kernel_size=3, stride=2,
+                           padding=1, output_padding=1),
+        nn.InstanceNorm2d(128),
+        nn.ReLU(inplace=True),
         nn.ConvTranspose2d(128, 64, kernel_size=3, stride=2,
                            padding=1, output_padding=1),
         nn.InstanceNorm2d(64),

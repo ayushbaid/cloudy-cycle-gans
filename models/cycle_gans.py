@@ -78,9 +78,16 @@ class CycleGAN(object):
     )
 
     # applying cycle on gen_B2A
-    generator_B2A2B = self.generator_A2B(gen_B2A)
+    gen_B2A2B = self.generator_A2B(gen_B2A)
 
-    loss_cycle_B2A = lambda_*self.cycle_loss_criterion(inputB, generator_B2A2B)
+    loss_cycle_B2A = lambda_*self.cycle_loss_criterion(inputB, gen_B2A2B)
+
+    del gen_A2B
+    del gen_B2A
+    del gen_B2A2B
+    del gen_A2B2A
+    del discriminatorA_output_fake
+    del discriminatorB_output_fake
 
     return (loss_generator_A2B + loss_generator_B2A,  # gan loss for generator
             loss_cycle_A2B + loss_cycle_B2A,  # cycle loss
@@ -93,14 +100,18 @@ class CycleGAN(object):
     discriminatorA_output_real = self.discriminator_A(inputA)
 
     # discriminator wants to prevent being fooled and classify correctly
-    loss_discriminatorA = self.gan_loss_criterion(
+    loss_discriminatorA = 0.5*self.gan_loss_criterion(
         discriminatorA_output_real,
         self.target_real.expand_as(discriminatorA_output_real)
     ) + self.gan_loss_criterion(
         discriminatorA_output_fake,
         self.target_fake.expand_as(discriminatorA_output_fake)
     )
-    loss_discriminatorA *= 0.5
+
+    del gen_B2A
+    del discriminatorA_output_fake
+    del discriminatorA_output_real
+
     return loss_discriminatorA
 
   def forward_train_DB(self, inputA, inputB):
@@ -110,14 +121,18 @@ class CycleGAN(object):
     discriminatorB_output_real = self.discriminator_B(inputB)
 
     # discriminator wants to prevent being fooled and classify correctly
-    loss_discriminatorB = self.gan_loss_criterion(
+    loss_discriminatorB = 0.5*self.gan_loss_criterion(
         discriminatorB_output_real,
         self.target_real.expand_as(discriminatorB_output_real)
     ) + self.gan_loss_criterion(
         discriminatorB_output_fake,
         self.target_fake.expand_as(discriminatorB_output_fake)
     )
-    loss_discriminatorB *= 0.5
+
+    del gen_A2B
+    del discriminatorB_output_fake
+    del discriminatorB_output_real
+
     return loss_discriminatorB
 
   def generate_images(self, inputA, inputB, switch_modes=True):

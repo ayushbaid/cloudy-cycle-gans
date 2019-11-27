@@ -110,8 +110,7 @@ class Trainer():
 
         # train the generator
         self.optimizer_G.zero_grad()
-        loss_generator_total = loss_generator + loss_cycle
-        loss_generator_total.backward()
+        (loss_generator + loss_cycle).backward()
         self.optimizer_G.step()
 
         # train the discriminator A
@@ -127,10 +126,10 @@ class Trainer():
         self.optimizer_D_B.step()
 
         # get scalar values
-        scalar_loss_generator = float(loss_generator.detach().cpu())
+        scalar_loss_generator = float(loss_generator.detach().cpu().item())
         scalar_loss_discriminator = float(
-            (loss_discriminator_A + loss_discriminator_B).detach().cpu())
-        scalar_loss_cycle = float(loss_cycle.detach().cpu())
+            (loss_discriminator_A + loss_discriminator_B).detach().cpu().item())
+        scalar_loss_cycle = float(loss_cycle.detach().cpu().item())
 
         self.train_history.aggregate_loss_vals(
             scalar_loss_generator+scalar_loss_discriminator+scalar_loss_cycle,
