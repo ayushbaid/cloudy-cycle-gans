@@ -21,8 +21,9 @@ class Descriminator(nn.Module):
         nn.Conv2d(128, 256, kernel_size=4, stride=2),
         nn.InstanceNorm2d(256),
         nn.LeakyReLU(0.2, inplace=True),
-        nn.Conv2d(256, 1, kernel_size=30)
+        nn.Conv2d(256, 1, kernel_size=4)
     )
 
   def forward(self, x):
-    return self.net(x).reshape(x.shape[0], 1)
+    out = self.net(x)
+    return nn.functional.avg_pool2d(out, out.size()[2:]).view(out.size()[0], -1)

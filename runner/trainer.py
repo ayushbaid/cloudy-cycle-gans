@@ -1,5 +1,6 @@
 import os
 import itertools
+import time
 
 from runner.dataloader import TwoClassLoader
 from transforms.im_transforms import get_fundamental_transforms
@@ -32,13 +33,13 @@ class Trainer():
     dataloader_args = {'num_workers': 1, 'pin_memory': True} if cuda else {}
 
     self.train_dataset = TwoClassLoader(
-        data_dir, get_fundamental_transforms(im_size=(300, 300)), split='train')
+        data_dir, get_fundamental_transforms(im_size=(256, 256)), split='train')
 
     self.train_loader = torch.utils.data.DataLoader(self.train_dataset, batch_size=batch_size, shuffle=True,
                                                     **dataloader_args)
 
     self.val_dataset = TwoClassLoader(
-        data_dir, get_fundamental_transforms(im_size=(300, 300)), split='val')
+        data_dir, get_fundamental_transforms(im_size=(256, 256)), split='val')
     self.val_loader = torch.utils.data.DataLoader(self.val_dataset, batch_size=batch_size, shuffle=True,
                                                   **dataloader_args
                                                   )
@@ -85,11 +86,19 @@ class Trainer():
     '''
     The main train loop
     '''
+    time_start_global = time.time()
+    time_start_prev_log = time.time()
     self.cycle_gan.train_mode()
     for epoch_idx in range(num_epochs):
       for batch_idx, batch in enumerate(self.train_loader):
         if batch_idx % 100 == 0:
           print('Epoch #{} Batch#{}'.format(epoch_idx, batch_idx))
+          curr_time = time.time()
+          print('Time elapsed: Global = {}s Last log = {}s'.format(curr_time-time_start_global,
+                                                                   curr_time-time_start_prev_log
+                                                                   ))
+          time_start_prev_log = curr_time
+
         if self.cuda:
           inputA, inputB = Variable(batch[0]).cuda(), Variable(batch[1]).cuda()
         else:
@@ -133,7 +142,8 @@ class Trainer():
         if batch_idx % 100 == 0:
           # commit the loss aggregations
           self.train_history.log_losses(epoch_idx)
-          self.train_history.plot_train_loss()
+          self.train_history.save_train_loss(self.model_dir)
+          self.save_model()
 
       # update learning rates
       self.lr_scheduler_G.step()
@@ -141,4 +151,5 @@ class Trainer():
       self.lr_scheduler_D_B.step()
 
     self.train_history.log_losses(epoch_idx)
+    self.train_history.plot_train_loss()
     self.train_history.plot_train_loss()

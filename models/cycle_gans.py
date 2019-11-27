@@ -52,9 +52,7 @@ class CycleGAN(object):
 
     # apply the generatorB to convert into B space
     gen_A2B = self.generator_A2B(inputA)
-    discriminatorB_output_fake = self.discriminator_B(
-        self.fake_buffer_b.get(gen_A2B))
-    discriminatorB_output_real = self.discriminator_B(inputB)
+    discriminatorB_output_fake = self.discriminator_B(gen_A2B)
 
     # adding gan loss
 
@@ -71,9 +69,7 @@ class CycleGAN(object):
 
     # apply the generatorA to convert into A space
     gen_B2A = self.generator_B2A(inputB)
-    discriminatorA_output_fake = self.discriminator_A(
-        self.fake_buffer_a.get(gen_B2A))
-    discriminatorA_output_real = self.discriminator_A(inputA)
+    discriminatorA_output_fake = self.discriminator_A(gen_B2A)
 
     # generator wants to fool the descriminator
     loss_generator_B2A = self.gan_loss_criterion(
@@ -90,7 +86,7 @@ class CycleGAN(object):
             loss_cycle_A2B + loss_cycle_B2A,  # cycle loss
             )
 
-  def forward_train_DA( self, inputA, inputB ):
+  def forward_train_DA(self, inputA, inputB):
     gen_B2A = self.generator_B2A(inputB)
     discriminatorA_output_fake = self.discriminator_A(
         self.fake_buffer_a.get(gen_B2A))
@@ -107,7 +103,7 @@ class CycleGAN(object):
     loss_discriminatorA *= 0.5
     return loss_discriminatorA
 
-  def forward_train_DB( self, inputA, inputB ):
+  def forward_train_DB(self, inputA, inputB):
     gen_A2B = self.generator_A2B(inputA)
     discriminatorB_output_fake = self.discriminator_B(
         self.fake_buffer_b.get(gen_A2B))
@@ -149,7 +145,7 @@ class CycleGAN(object):
     # load the state from disk
 
     self.generator_A2B.load_state_dict(state_dict['generator_A2B'])
-    self.generator_B2A.load_state_dict(state_dict['generator_A2B'])
+    self.generator_B2A.load_state_dict(state_dict['generator_B2A'])
     self.discriminator_A.load_state_dict(state_dict['discriminator_A'])
     self.discriminator_B.load_state_dict(state_dict['discriminator_B'])
 
