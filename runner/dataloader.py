@@ -13,10 +13,10 @@ class TwoClassLoader(data.Dataset):
   def __init__(self,
                root_dir,
                transforms_A=get_fundamental_transforms(
-                   im_size=(256, 256), mean_val=0.49000312, std_val=0.27253689
+                   im_size=(128, 128), mean_val=0.49000312, std_val=0.27253689
                ),
                transforms_B=get_fundamental_transforms(
-                   im_size=(256, 256), mean_val=0.47342853, std_val=0.26870837
+                   im_size=(128, 128), mean_val=0.47342853, std_val=0.26870837
                ),
                split='train',
                classes=('cloudy', 'sunny')):

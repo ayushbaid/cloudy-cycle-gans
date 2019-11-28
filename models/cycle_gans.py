@@ -23,11 +23,11 @@ class CycleGAN(object):
     self.target_fake = self.get_target_tensor(1.0)
 
     # init different models
-    self.generator_A2B = Generator()
-    self.generator_B2A = Generator()
+    #self.generator_A2B = Generator()
+    #self.generator_B2A = Generator()
 
-    # self.generator_A2B = GeneratorFull()
-    # self.generator_B2A = GeneratorFull()
+    self.generator_A2B = GeneratorFull()
+    self.generator_B2A = GeneratorFull()
 
     self.discriminator_A = Descriminator()
     self.discriminator_B = Descriminator()
@@ -108,7 +108,7 @@ class CycleGAN(object):
     discriminatorA_output_real = self.discriminator_A(inputA)
 
     # discriminator wants to prevent being fooled and classify correctly
-    loss_discriminatorA = 0.5*self.gan_loss_criterion(
+    loss_discriminatorA = 0.1*self.gan_loss_criterion(
         discriminatorA_output_real,
         self.target_real.expand_as(discriminatorA_output_real)
     ) + self.gan_loss_criterion(
@@ -127,7 +127,7 @@ class CycleGAN(object):
     discriminatorB_output_real = self.discriminator_B(inputB)
 
     # discriminator wants to prevent being fooled and classify correctly
-    loss_discriminatorB = 0.5*self.gan_loss_criterion(
+    loss_discriminatorB = 0.1*self.gan_loss_criterion(
         discriminatorB_output_real,
         self.target_real.expand_as(discriminatorB_output_real)
     ) + self.gan_loss_criterion(
