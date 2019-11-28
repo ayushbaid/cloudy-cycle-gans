@@ -1,7 +1,10 @@
 from models.generator import Generator
 from models.generator_full import GeneratorFull
 from models.descriminator import Descriminator
+from models.content_similarity_checker import ContentSimilarityChecker
 from utils.buffer import ImageBuffer
+
+from torch.autograd import Variable
 
 import torch
 
@@ -15,9 +18,9 @@ class CycleGAN(object):
     self.use_identity_loss = use_identity_loss
 
     # setting up target labels
-    self.target_real = self.get_target_tensor(1)
+    self.target_real = self.get_target_tensor(1.0)
 
-    self.target_fake = self.get_target_tensor(0)
+    self.target_fake = self.get_target_tensor(0.0)
 
     # init different models
     # self.generator_A2B = Generator()
@@ -28,6 +31,8 @@ class CycleGAN(object):
 
     self.discriminator_A = Descriminator()
     self.discriminator_B = Descriminator()
+
+    self.content_similarlity_checker = ContentSimilarityChecker()
 
     if is_cuda:
       self.generator_A2B.cuda()
@@ -63,7 +68,8 @@ class CycleGAN(object):
     # generator wants to fool the descriminator
     loss_generator_A2B = self.gan_loss_criterion(
         discriminatorB_output_fake,
-        self.target_real.expand_as(discriminatorB_output_fake)
+        Variable(self.target_real.expand_as(
+            discriminatorB_output_fake), requires_grad=False)
     )
 
     # applying cycle on gen_A2B
@@ -77,7 +83,8 @@ class CycleGAN(object):
     # generator wants to fool the descriminator
     loss_generator_B2A = self.gan_loss_criterion(
         discriminatorA_output_fake,
-        self.target_real.expand_as(discriminatorA_output_fake)
+        Variable(self.target_real.expand_as(
+            discriminatorA_output_fake), requires_grad=False)
     )
 
     loss_cycle_B2A = lambda_ * \
@@ -86,7 +93,9 @@ class CycleGAN(object):
     del discriminatorA_output_fake
     del discriminatorB_output_fake
 
-    return (loss_generator_A2B + loss_generator_B2A,  # gan loss for generator
+    return (loss_generator_A2B + loss_generator_B2A +
+            0.1*self.content_similarlity_checker(inputA, self.gen_A2B) +
+            0.1*self.content_similarlity_checker(inputB, self.gen_B2A),
             loss_cycle_A2B + loss_cycle_B2A,  # cycle loss
             )
 
