@@ -10,14 +10,14 @@ class ContentSimilarityChecker(nn.Module):
   def __init__(self):
 
     super(ContentSimilarityChecker, self).__init__()
-    alexnet_pretrained = models.alexnet(pretrained=True)
+    vgg_pretrained = models.vgg11(pretrained=True)
 
     '''
     Just extract the first layer from it
     '''
 
     self.net = nn.Sequential(
-        alexnet_pretrained.features[0],
+        vgg_pretrained.features[0],
         nn.ReLU(inplace=True)
     )
 
