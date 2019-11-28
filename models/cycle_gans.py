@@ -39,6 +39,7 @@ class CycleGAN(object):
       self.generator_B2A.cuda()
       self.discriminator_A.cuda()
       self.discriminator_B.cuda()
+      self.content_similarlity_checker.cuda()
 
     # define the loss functions
     # mse loss is used instead of cross entropy to reduce model osscilation
