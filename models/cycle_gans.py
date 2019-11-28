@@ -23,11 +23,11 @@ class CycleGAN(object):
     self.target_fake = self.get_target_tensor(1.0)
 
     # init different models
-    # self.generator_A2B = Generator()
-    # self.generator_B2A = Generator()
+    self.generator_A2B = Generator()
+    self.generator_B2A = Generator()
 
-    self.generator_A2B = GeneratorFull()
-    self.generator_B2A = GeneratorFull()
+    # self.generator_A2B = GeneratorFull()
+    # self.generator_B2A = GeneratorFull()
 
     self.discriminator_A = Descriminator()
     self.discriminator_B = Descriminator()

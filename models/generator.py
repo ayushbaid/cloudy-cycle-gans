@@ -8,7 +8,7 @@ class Generator(nn.Module):
   Define the generator model
   '''
 
-  def __init__(self, num_residual_blocks=3):
+  def __init__(self, num_residual_blocks=6):
     '''
     The model defined in the paper is:
     c7s1-64,d128,d256,R256,R256,R256,R256,R256,R256,u128,u64,c7s1-3
@@ -32,26 +32,26 @@ class Generator(nn.Module):
         nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1),
         nn.InstanceNorm2d(128),
         nn.ReLU(inplace=True),
-        nn.Conv2d(128, 128, kernel_size=3, stride=2, padding=1),
-        nn.InstanceNorm2d(128),
+        nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1),
+        nn.InstanceNorm2d(256),
         nn.ReLU(inplace=True),
     )
 
     temp_list = []
     for _ in range(num_residual_blocks):
-      temp_list.append(ResidualBlock(128))
+      temp_list.append(ResidualBlock(256))
 
     # R128,R128,R128
     self.residual_net = nn.Sequential(*temp_list)
 
     # u64
     self.upsampling = nn.Sequential(
-        nn.ConvTranspose2d(128, 128, kernel_size=2, stride=2,
-                           padding=0, output_padding=0),
+        nn.ConvTranspose2d(256, 128, kernel_size=3, stride=2,
+                           padding=1, output_padding=1),
         nn.InstanceNorm2d(128),
         nn.ReLU(inplace=True),
-        nn.ConvTranspose2d(128, 64, kernel_size=2, stride=2,
-                           padding=0, output_padding=0),
+        nn.ConvTranspose2d(128, 64, kernel_size=3, stride=2,
+                           padding=1, output_padding=1),
         nn.InstanceNorm2d(64),
         nn.ReLU(inplace=True),
     )
