@@ -18,9 +18,9 @@ class CycleGAN(object):
     self.use_identity_loss = use_identity_loss
 
     # setting up target labels
-    self.target_real = self.get_target_tensor(1.0)
+    self.target_real = self.get_target_tensor(0.0)
 
-    self.target_fake = self.get_target_tensor(0.0)
+    self.target_fake = self.get_target_tensor(1.0)
 
     # init different models
     # self.generator_A2B = Generator()
@@ -46,8 +46,8 @@ class CycleGAN(object):
     self.gan_loss_criterion = nn.MSELoss()
     self.cycle_loss_criterion = nn.L1Loss()
 
-    if self.use_identity_loss:
-      self.identity_loss_criterion = nn.L1Loss()
+    # if self.use_identity_loss:
+    self.identity_loss_criterion = nn.L1Loss()
 
     self.fake_buffer_a = ImageBuffer(buffer_size, self.is_cuda)
     self.fake_buffer_b = ImageBuffer(buffer_size, self.is_cuda)
@@ -95,8 +95,10 @@ class CycleGAN(object):
     del discriminatorB_output_fake
 
     return (loss_generator_A2B + loss_generator_B2A +
-            0.1*self.content_similarlity_checker(inputA, self.gen_A2B) +
-            0.1*self.content_similarlity_checker(inputB, self.gen_B2A),
+            lambda_ * 0.1 * self.content_similarlity_checker(inputA, self.gen_A2B) +
+            lambda_ * 0.1 * self.content_similarlity_checker(inputB, self.gen_B2A) +
+            lambda_ * 0.1 * self.identity_loss_criterion(inputA, self.gen_A2B) +
+            lambda_ * 0.1 * self.identity_loss_criterion(inputB, self.gen_B2A),
             loss_cycle_A2B + loss_cycle_B2A,  # cycle loss
             )
 
