@@ -33,7 +33,7 @@ class ImageBuffer(object):
         self.buffer_list.append(image)
         result.append(image)
       else:
-        p = random.uniform(0, 1) > 0.65  # simulating coin toss
+        p = random.uniform(0, 1) > 0.35  # simulating coin toss
 
         if p:
           # fetch value from the buffer
