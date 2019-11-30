@@ -18,6 +18,7 @@ class ContentSimilarityChecker(nn.Module):
 
     self.net = nn.Sequential(
         vgg_pretrained.features[0],
+        nn.InstanceNorm2d(vgg_pretrained.features[0].out_channels),
         nn.ReLU(inplace=True)
     )
 
