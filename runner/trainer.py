@@ -34,7 +34,7 @@ class Trainer():
 
     dataloader_args = {'num_workers': 1, 'pin_memory': True} if cuda else {}
 
-    self.train_dataset = TwoClassLoader(data_dir, split='test')
+    self.train_dataset = TwoClassLoader(data_dir, split='train')
 
     self.train_loader = torch.utils.data.DataLoader(self.train_dataset, batch_size=batch_size, shuffle=True,
                                                     **dataloader_args)
@@ -57,11 +57,11 @@ class Trainer():
     # starting epoch = 0
     # epoch to start linearly decaying the learning rate to 0 = 100
     self.lr_scheduler_G = torch.optim.lr_scheduler.LambdaLR(
-        self.optimizer_G, lr_lambda=LambdaLR(50, 0, 25).step)
+        self.optimizer_G, lr_lambda=LambdaLR(100, 0, 50).step)
     self.lr_scheduler_D_A = torch.optim.lr_scheduler.LambdaLR(
-        self.optimizer_D_A, lr_lambda=LambdaLR(50, 0, 25).step)
+        self.optimizer_D_A, lr_lambda=LambdaLR(100, 0, 50).step)
     self.lr_scheduler_D_B = torch.optim.lr_scheduler.LambdaLR(
-        self.optimizer_D_B, lr_lambda=LambdaLR(50, 0, 25).step)
+        self.optimizer_D_B, lr_lambda=LambdaLR(100, 0, 50).step)
 
     self.train_history = TrainMetadata()
 
