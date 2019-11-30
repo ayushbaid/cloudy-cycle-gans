@@ -10,7 +10,6 @@ class TrainMetadata(object):
 
   def __init__(self):
     self.loss_train_total = []
-    self.loss_train_generator = []
     self.loss_train_generator_A2B = []
     self.loss_train_generator_B2A = []
     self.loss_train_generator_identity = []
@@ -21,7 +20,6 @@ class TrainMetadata(object):
     # variables for aggegating over an epoch
     self.agg_num_samples = 0
     self.agg_loss_total = 0
-    self.agg_loss_generator = 0
     self.agg_loss_generator_A2B = 0
     self.agg_loss_generator_B2A = 0
     self.agg_loss_generator_identity = 0
@@ -67,7 +65,9 @@ class TrainMetadata(object):
     self.epoch_vals.append(epoch_idx)
 
     print('Losses: T={} G={}, D={}, C={}'.format(self.loss_train_total[-1],
-                                                 self.loss_train_generator[-1],
+                                                 self.loss_train_generator_A2B[-1],
+                                                 self.loss_train_generator_B2A[-1],
+                                                 self.loss_train_generator_identity[-1],
                                                  self.loss_train_discriminator[-1],
                                                  self.loss_train_cycle[-1]
                                                  ))
@@ -75,7 +75,9 @@ class TrainMetadata(object):
     # reset aggegations
     self.agg_num_samples = 0
     self.agg_loss_total = 0
-    self.agg_loss_generator = 0
+    self.agg_loss_generator_A2B = 0
+    self.agg_loss_generator_B2A = 0
+    self.agg_loss_generator_identity = 0
     self.agg_loss_discriminator = 0
     self.agg_loss_cycle = 0
 
