@@ -181,23 +181,46 @@ class Trainer():
         gen_A2B, gen_B2A, gen_A2B2A, gen_B2A2B = self.cycle_gan.generate_images(
             inputA, inputB)
 
+        # contrast stretch the images
+        inputA_ = torch.squeeze(inputA.detach().cpu())
+        inputA_ = (inputA_ - torch.min(inputA_) /
+                   (torch.max(inputA_) - torch.min(inputA_)))
+
+        inputB_ = torch.squeeze(inputB.detach().cpu())
+        inputB_ = (inputB_ - torch.min(inputB_) /
+                   (torch.max(inputB_) - torch.min(inputB_)))
+
+        gen_A2B_ = torch.squeeze(gen_A2B.detach().cpu())
+        gen_A2B_ = (gen_A2B_ - torch.min(gen_A2B_) /
+                    (torch.max(gen_A2B_) - torch.min(gen_A2B_)))
+
+        gen_B2A_ = torch.squeeze(gen_B2A.detach().cpu())
+        gen_B2A_ = (gen_B2A_ - torch.min(gen_B2A_) /
+                    (torch.max(gen_B2A_) - torch.min(gen_B2A_)))
+
+        gen_A2B2A_ = torch.squeeze(gen_A2B2A.detach().cpu())
+        gen_A2B2A_ = (gen_A2B2A_ - torch.min(gen_A2B2A_) /
+                      (torch.max(gen_A2B2A_) - torch.min(gen_A2B2A_)))
+
+        gen_B2A2B_ = torch.squeeze(gen_B2A2B.detach().cpu())
+        gen_B2A2B_ = (gen_B2A2B_ - torch.min(gen_B2A2B_) /
+                      (torch.max(gen_B2A2B_) - torch.min(gen_B2A2B_)))
+
         # save them
-        img_A = ToPILImage()(torch.squeeze(inputA.detach().cpu())*0.27253689 + 0.49000312)
+        img_A = ToPILImage()(inputA_)
         img_A.save(os.path.join(out_dir, str(batch_idx) + '_A.png'))
 
-        img_B = ToPILImage()(torch.squeeze(inputB.detach().cpu())*0.26870837+0.47342853)
+        img_B = ToPILImage()(inputB_)
         img_B.save(os.path.join(out_dir, str(batch_idx) + '_B.png'))
 
-        img_B2A = ToPILImage()(torch.squeeze(gen_B2A.detach().cpu())*0.27253689 + 0.49000312)
+        img_B2A = ToPILImage()(gen_B2A_)
         img_B2A.save(os.path.join(out_dir, str(batch_idx) + '_B2A.png'))
 
-        img_A2B = ToPILImage()(torch.squeeze(gen_A2B.detach().cpu())*0.26870837+0.47342853)
+        img_A2B = ToPILImage()(gen_A2B_)
         img_A2B.save(os.path.join(out_dir, str(batch_idx) + '_A2B.png'))
 
-        img_A2B2A = ToPILImage()(torch.squeeze(
-            gen_A2B2A.detach().cpu())*0.27253689 + 0.49000312)
+        img_A2B2A = ToPILImage()(gen_A2B2A_)
         img_A2B2A.save(os.path.join(out_dir, str(batch_idx) + '_A2B2A.png'))
 
-        img_B2A2B = ToPILImage()(torch.squeeze(
-            gen_B2A2B.detach().cpu())*0.26870837+0.47342853)
+        img_B2A2B = ToPILImage()(gen_B2A2B_)
         img_B2A2B.save(os.path.join(out_dir, str(batch_idx) + '_B2A2B.png'))
