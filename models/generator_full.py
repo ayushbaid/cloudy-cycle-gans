@@ -14,7 +14,7 @@ class GeneratorFull(nn.Module):
     c7s1-64,d128,d256,R256,R256,R256,R256,R256,R256,u128,u64,c7s1-3
 
     we will use a smaller model:
-    c7s1-64,R64,R64,R64,R64,c7s1-3
+    c7s1-64,R64,R64,R64,R64,R64,R64,R64,c7s1-3
     '''
 
     super(GeneratorFull, self).__init__()
@@ -31,7 +31,7 @@ class GeneratorFull(nn.Module):
     for _ in range(num_residual_blocks):
       temp_list.append(ResidualBlock(64))
 
-    # R128,R128,R128
+    # Residual blocks
     self.residual_net = nn.Sequential(*temp_list)
 
     self.output_conv = nn.Sequential(
