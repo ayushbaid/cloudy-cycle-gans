@@ -23,7 +23,7 @@ class Descriminator(nn.Module):
         nn.Conv2d(128, 128, kernel_size=4, stride=2),
         nn.InstanceNorm2d(128),
         nn.LeakyReLU(0.2, inplace=True),
-        nn.Conv2d(256, 128, kernel_size=4, stride=2),
+        nn.Conv2d(128, 128, kernel_size=4, stride=2),
         nn.InstanceNorm2d(128),
         nn.LeakyReLU(0.2, inplace=True),
         nn.Conv2d(128, 1, kernel_size=4, stride=2)
