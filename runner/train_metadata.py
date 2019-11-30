@@ -64,7 +64,7 @@ class TrainMetadata(object):
         self.agg_loss_cycle/self.agg_num_samples)
     self.epoch_vals.append(epoch_idx)
 
-    print('Losses: T={} G={}, D={}, C={}'.format(self.loss_train_total[-1],
+    print('Losses: T={} G_a2b={}, G_b2a={}, G_identity={}, D={}, C={}'.format(self.loss_train_total[-1],
                                                  self.loss_train_generator_A2B[-1],
                                                  self.loss_train_generator_B2A[-1],
                                                  self.loss_train_generator_identity[-1],
