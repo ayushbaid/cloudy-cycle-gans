@@ -9,7 +9,7 @@ class ImageBuffer(object):
   '''
   Implement the image buffer to be used in training
 
-  With p=0.5, return the input images; otherwise return data from buffer and replace them with input
+  With p=0.35, return the input images; otherwise return data from buffer and replace them with input
   '''
   # TODO: write tests
 
@@ -33,7 +33,7 @@ class ImageBuffer(object):
         self.buffer_list.append(image)
         result.append(image)
       else:
-        p = random.uniform(0, 1) > 0.5  # simulating coin toss
+        p = random.uniform(0, 1) > 0.65  # simulating coin toss
 
         if p:
           # fetch value from the buffer
