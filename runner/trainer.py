@@ -111,12 +111,12 @@ class Trainer():
           inputA, inputB = Variable(batch[0]), Variable(batch[1])
 
         # do the loss computation
-        loss_generator, loss_cycle = self.cycle_gan.forward_train(
+        loss_generatorA2B, loss_generatorB2A, loss_generator_identity, loss_cycle = self.cycle_gan.forward_train(
             inputA, inputB)
 
         # train the generator
         self.optimizer_G.zero_grad()
-        (loss_generator + loss_cycle).backward()
+        (loss_generatorA2B + loss_generatorB2A + loss_generator_identity + loss_cycle).backward()
         self.optimizer_G.step()
 
         # train the discriminator A
@@ -132,14 +132,18 @@ class Trainer():
         self.optimizer_D_B.step()
 
         # get scalar values
-        scalar_loss_generator = float(loss_generator.detach().cpu().item())
+        scalar_loss_generator_A2B = float(loss_generator_A2B.detach().cpu().item())
+        scalar_loss_generator_B2A = float(loss_generator_B2A.detach().cpu().item())
+        scalar_loss_generator_identity = float(loss_generator_identity.detach().cpu().item())
         scalar_loss_discriminator = float(
             (loss_discriminator_A + loss_discriminator_B).detach().cpu().item())
         scalar_loss_cycle = float(loss_cycle.detach().cpu().item())
 
         self.train_history.aggregate_loss_vals(
-            scalar_loss_generator+scalar_loss_discriminator+scalar_loss_cycle,
-            scalar_loss_generator,
+            scalar_loss_generator_A2B+scalar_loss_generator_B2A+scalar_loss_generator_identity+scalar_loss_discriminator+scalar_loss_cycle,
+            scalar_loss_generator_A2B,
+            scalar_loss_generator_B2A,
+            scalar_loss_generator_identity,
             scalar_loss_discriminator,
             scalar_loss_cycle,
             inputA.shape[0])

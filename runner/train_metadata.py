@@ -11,6 +11,9 @@ class TrainMetadata(object):
   def __init__(self):
     self.loss_train_total = []
     self.loss_train_generator = []
+    self.loss_train_generator_A2B = []
+    self.loss_train_generator_B2A = []
+    self.loss_train_generator_identity = []
     self.loss_train_discriminator = []
     self.loss_train_cycle = []
     self.epoch_vals = []
@@ -19,18 +22,25 @@ class TrainMetadata(object):
     self.agg_num_samples = 0
     self.agg_loss_total = 0
     self.agg_loss_generator = 0
+    self.agg_loss_generator_A2B = 0
+    self.agg_loss_generator_B2A = 0
+    self.agg_loss_generator_identity = 0
     self.agg_loss_discriminator = 0
     self.agg_loss_cycle = 0
 
   def aggregate_loss_vals(self,
                           total_loss,
-                          generator_loss,
+                          generator_loss_A2B,
+                          generator_loss_B2A,
+                          generator_loss_identity,
                           discriminator_loss,
                           cycle_loss,
                           batch_size):
     self.agg_num_samples += batch_size
     self.agg_loss_total += total_loss*batch_size
-    self.agg_loss_generator += generator_loss*batch_size
+    self.agg_loss_generator_A2B += generator_loss_A2B*batch_size
+    self.agg_loss_generator_B2A += generator_loss_B2A*batch_size
+    self.agg_loss_generator_identity += generator_loss_identity*batch_size
     self.agg_loss_discriminator += discriminator_loss*batch_size
     self.agg_loss_cycle += cycle_loss*batch_size
 
@@ -44,8 +54,12 @@ class TrainMetadata(object):
     self.loss_train_total.append(
         self.agg_loss_total/self.agg_num_samples
     )
-    self.loss_train_generator.append(
-        self.agg_loss_generator/self.agg_num_samples)
+    self.loss_train_generator_A2B.append(
+        self.agg_loss_generator_A2B/self.agg_num_samples)
+    self.loss_train_generator_B2A.append(
+        self.agg_loss_generator_B2A/self.agg_num_samples)
+    self.loss_train_generator_identity.append(
+        self.agg_loss_generator_identity/self.agg_num_samples)
     self.loss_train_discriminator.append(
         self.agg_loss_discriminator/self.agg_num_samples)
     self.loss_train_cycle.append(
@@ -68,7 +82,9 @@ class TrainMetadata(object):
   def save_train_loss(self, dir_name):
     fig = plt.figure()
     plt.plot(self.loss_train_total, label='total')
-    plt.plot(self.loss_train_generator, label='generator')
+    plt.plot(self.loss_train_generator_A2B, label='generatorA2B')
+    plt.plot(self.loss_train_generator_B2A, label='generatorB2A')
+    plt.plot(self.loss_train_generator_identity, label='generator_identity')
     plt.plot(self.loss_train_discriminator, label='discriminator')
     plt.plot(self.loss_train_cycle, label='cycle')
 
@@ -80,7 +96,9 @@ class TrainMetadata(object):
   def plot_train_loss(self):
     plt.figure()
     plt.plot(self.loss_train_total, label='total')
-    plt.plot(self.loss_train_generator, label='generator')
+    plt.plot(self.loss_train_generator_A2B, label='generatorA2B')
+    plt.plot(self.loss_train_generator_B2A, label='generatorB2A')
+    plt.plot(self.loss_train_generator_identity, label='generator_identity')
     plt.plot(self.loss_train_discriminator, label='discriminator')
     plt.plot(self.loss_train_cycle, label='cycle')
 

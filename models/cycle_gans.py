@@ -94,11 +94,13 @@ class CycleGAN(object):
     del discriminatorA_output_fake
     del discriminatorB_output_fake
 
-    return (loss_generator_A2B + loss_generator_B2A +
-            lambda_ * 0.1 * self.content_similarlity_checker(inputA, self.gen_A2B) +
+    loss_generator_identity = lambda_ * 0.1 * self.content_similarlity_checker(inputA, self.gen_A2B) +
             lambda_ * 0.1 * self.content_similarlity_checker(inputB, self.gen_B2A) +
             lambda_ * 0.1 * self.identity_loss_criterion(inputA, self.gen_A2B) +
-            lambda_ * 0.1 * self.identity_loss_criterion(inputB, self.gen_B2A),
+            lambda_ * 0.1 * self.identity_loss_criterion(inputB, self.gen_B2A)
+
+
+    return (loss_generator_A2B, loss_generator_B2A, loss_generator_identity,
             loss_cycle_A2B + loss_cycle_B2A,  # cycle loss
             )
 
