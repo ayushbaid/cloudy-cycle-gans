@@ -4,9 +4,7 @@ import time
 
 from runner.dataloader import TwoClassLoader
 from transforms.im_transforms import get_fundamental_transforms
-from torchvision.transforms import ToPILImage
 from torchvision import utils
-from PIL import Image, ImageOps
 from models.cycle_gans import CycleGAN
 from runner.train_metadata import TrainMetadata
 from utils.lrScheduler import LambdaLR
@@ -196,23 +194,23 @@ class Trainer():
         # inputA_ = (inputA_ - torch.min(inputA_) /
         #            (torch.max(inputA_) - torch.min(inputA_)))
 
-        inputB_ = torch.squeeze(inputB.detach().cpu())
+        inputB_ = inputB.detach().cpu()
         # inputB_ = (inputB_ - torch.min(inputB_) /
         #            (torch.max(inputB_) - torch.min(inputB_)))
 
-        gen_A2B_ = torch.squeeze(gen_A2B.detach().cpu())
+        gen_A2B_ = gen_A2B.detach().cpu()
         # gen_A2B_ = (gen_A2B_ - torch.min(gen_A2B_) /
         #             (torch.max(gen_A2B_) - torch.min(gen_A2B_)))
 
-        gen_B2A_ = torch.squeeze(gen_B2A.detach().cpu())
+        gen_B2A_ = gen_B2A.detach().cpu()
         # gen_B2A_ = (gen_B2A_ - torch.min(gen_B2A_) /
         #             (torch.max(gen_B2A_) - torch.min(gen_B2A_)))
 
-        gen_A2B2A_ = torch.squeeze(gen_A2B2A.detach().cpu())
+        gen_A2B2A_ = gen_A2B2A.detach().cpu()
         # gen_A2B2A_ = (gen_A2B2A_ - torch.min(gen_A2B2A_) /
         #               (torch.max(gen_A2B2A_) - torch.min(gen_A2B2A_)))
 
-        gen_B2A2B_ = torch.squeeze(gen_B2A2B.detach().cpu())
+        gen_B2A2B_ = gen_B2A2B.detach().cpu()
         # gen_B2A2B_ = (gen_B2A2B_ - torch.min(gen_B2A2B_) /
         #               (torch.max(gen_B2A2B_) - torch.min(gen_B2A2B_)))
 
@@ -224,17 +222,17 @@ class Trainer():
         utils.save_image(inputA_, os.path.join(out_dir, str(
             batch_idx) + '_A.png'), normalize=True, range=None, scale_each=False)
 
-        img_B = ToPILImage()(inputB_)
-        img_B.save(os.path.join(out_dir, str(batch_idx) + '_B.png'))
+        utils.save_image(inputB_, os.path.join(out_dir, str(
+            batch_idx) + '_B.png'), normalize=True, range=None, scale_each=False)
 
-        img_B2A = ToPILImage()(gen_B2A_)
-        img_B2A.save(os.path.join(out_dir, str(batch_idx) + '_B2A.png'))
+        utils.save_image(gen_A2B_, os.path.join(out_dir, str(
+            batch_idx) + '_A2B.png'), normalize=True, range=None, scale_each=False)
 
-        img_A2B = ToPILImage()(gen_A2B_)
-        img_A2B.save(os.path.join(out_dir, str(batch_idx) + '_A2B.png'))
+        utils.save_image(gen_B2A_, os.path.join(out_dir, str(
+            batch_idx) + '_B2A.png'), normalize=True, range=None, scale_each=False)
 
-        img_A2B2A = ToPILImage()(gen_A2B2A_)
-        img_A2B2A.save(os.path.join(out_dir, str(batch_idx) + '_A2B2A.png'))
+        utils.save_image(gen_A2B2A_, os.path.join(out_dir, str(
+            batch_idx) + '_A2B2A.png'), normalize=True, range=None, scale_each=False)
 
-        img_B2A2B = ToPILImage()(gen_B2A2B_)
-        img_B2A2B.save(os.path.join(out_dir, str(batch_idx) + '_B2A2B.png'))
+        utils.save_image(gen_B2A2B_, os.path.join(out_dir, str(
+            batch_idx) + '_B2A2B.png'), normalize=True, range=None, scale_each=False)
