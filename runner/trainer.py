@@ -5,7 +5,7 @@ import time
 from runner.dataloader import TwoClassLoader
 from transforms.im_transforms import get_fundamental_transforms
 from torchvision.transforms import ToPILImage
-from PIL import Image
+from PIL import Image, ImageOps
 from models.cycle_gans import CycleGAN
 from runner.train_metadata import TrainMetadata
 from utils.lrScheduler import LambdaLR
@@ -116,7 +116,8 @@ class Trainer():
 
         # train the generator
         self.optimizer_G.zero_grad()
-        (loss_generator_A2B + loss_generator_B2A + loss_generator_identity + loss_cycle).backward()
+        (loss_generator_A2B + loss_generator_B2A +
+         loss_generator_identity + loss_cycle).backward()
         self.optimizer_G.step()
 
         # train the discriminator A
@@ -132,15 +133,19 @@ class Trainer():
         self.optimizer_D_B.step()
 
         # get scalar values
-        scalar_loss_generator_A2B = float(loss_generator_A2B.detach().cpu().item())
-        scalar_loss_generator_B2A = float(loss_generator_B2A.detach().cpu().item())
-        scalar_loss_generator_identity = float(loss_generator_identity.detach().cpu().item())
+        scalar_loss_generator_A2B = float(
+            loss_generator_A2B.detach().cpu().item())
+        scalar_loss_generator_B2A = float(
+            loss_generator_B2A.detach().cpu().item())
+        scalar_loss_generator_identity = float(
+            loss_generator_identity.detach().cpu().item())
         scalar_loss_discriminator = float(
             (loss_discriminator_A + loss_discriminator_B).detach().cpu().item())
         scalar_loss_cycle = float(loss_cycle.detach().cpu().item())
 
         self.train_history.aggregate_loss_vals(
-            scalar_loss_generator_A2B+scalar_loss_generator_B2A+scalar_loss_generator_identity+scalar_loss_discriminator+scalar_loss_cycle,
+            scalar_loss_generator_A2B+scalar_loss_generator_B2A +
+            scalar_loss_generator_identity+scalar_loss_discriminator+scalar_loss_cycle,
             scalar_loss_generator_A2B,
             scalar_loss_generator_B2A,
             scalar_loss_generator_identity,
@@ -187,31 +192,32 @@ class Trainer():
 
         # contrast stretch the images
         inputA_ = torch.squeeze(inputA.detach().cpu())
-        inputA_ = (inputA_ - torch.min(inputA_) /
-                   (torch.max(inputA_) - torch.min(inputA_)))
+        # inputA_ = (inputA_ - torch.min(inputA_) /
+        #            (torch.max(inputA_) - torch.min(inputA_)))
 
         inputB_ = torch.squeeze(inputB.detach().cpu())
-        inputB_ = (inputB_ - torch.min(inputB_) /
-                   (torch.max(inputB_) - torch.min(inputB_)))
+        # inputB_ = (inputB_ - torch.min(inputB_) /
+        #            (torch.max(inputB_) - torch.min(inputB_)))
 
         gen_A2B_ = torch.squeeze(gen_A2B.detach().cpu())
-        gen_A2B_ = (gen_A2B_ - torch.min(gen_A2B_) /
-                    (torch.max(gen_A2B_) - torch.min(gen_A2B_)))
+        # gen_A2B_ = (gen_A2B_ - torch.min(gen_A2B_) /
+        #             (torch.max(gen_A2B_) - torch.min(gen_A2B_)))
 
         gen_B2A_ = torch.squeeze(gen_B2A.detach().cpu())
-        gen_B2A_ = (gen_B2A_ - torch.min(gen_B2A_) /
-                    (torch.max(gen_B2A_) - torch.min(gen_B2A_)))
+        # gen_B2A_ = (gen_B2A_ - torch.min(gen_B2A_) /
+        #             (torch.max(gen_B2A_) - torch.min(gen_B2A_)))
 
         gen_A2B2A_ = torch.squeeze(gen_A2B2A.detach().cpu())
-        gen_A2B2A_ = (gen_A2B2A_ - torch.min(gen_A2B2A_) /
-                      (torch.max(gen_A2B2A_) - torch.min(gen_A2B2A_)))
+        # gen_A2B2A_ = (gen_A2B2A_ - torch.min(gen_A2B2A_) /
+        #               (torch.max(gen_A2B2A_) - torch.min(gen_A2B2A_)))
 
         gen_B2A2B_ = torch.squeeze(gen_B2A2B.detach().cpu())
-        gen_B2A2B_ = (gen_B2A2B_ - torch.min(gen_B2A2B_) /
-                      (torch.max(gen_B2A2B_) - torch.min(gen_B2A2B_)))
+        # gen_B2A2B_ = (gen_B2A2B_ - torch.min(gen_B2A2B_) /
+        #               (torch.max(gen_B2A2B_) - torch.min(gen_B2A2B_)))
 
         # save them
         img_A = ToPILImage()(inputA_)
+        img_A = ImageOps.autocontrast(img_A)
         img_A.save(os.path.join(out_dir, str(batch_idx) + '_A.png'))
 
         img_B = ToPILImage()(inputB_)
