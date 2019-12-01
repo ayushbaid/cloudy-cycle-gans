@@ -5,6 +5,7 @@ import time
 from runner.dataloader import TwoClassLoader
 from transforms.im_transforms import get_fundamental_transforms
 from torchvision.transforms import ToPILImage
+from torchvision import utils
 from PIL import Image, ImageOps
 from models.cycle_gans import CycleGAN
 from runner.train_metadata import TrainMetadata
@@ -191,7 +192,7 @@ class Trainer():
             inputA, inputB)
 
         # contrast stretch the images
-        inputA_ = torch.squeeze(inputA.detach().cpu())
+        inputA_ = inputA.detach().cpu()
         # inputA_ = (inputA_ - torch.min(inputA_) /
         #            (torch.max(inputA_) - torch.min(inputA_)))
 
@@ -216,9 +217,12 @@ class Trainer():
         #               (torch.max(gen_B2A2B_) - torch.min(gen_B2A2B_)))
 
         # save them
-        img_A = ToPILImage()(inputA_)
-        img_A = ImageOps.autocontrast(img_A)
-        img_A.save(os.path.join(out_dir, str(batch_idx) + '_A.png'))
+        # img_A = ToPILImage()(inputA_)
+        # img_A = ImageOps.autocontrast(img_A)
+        # img_A.save(os.path.join(out_dir, str(batch_idx) + '_A.png'))
+
+        utils.save_image(inputA_, os.path.join(out_dir, str(
+            batch_idx) + '_A.png'), normalize=True, range=None, scale_each=False)
 
         img_B = ToPILImage()(inputB_)
         img_B.save(os.path.join(out_dir, str(batch_idx) + '_B.png'))
